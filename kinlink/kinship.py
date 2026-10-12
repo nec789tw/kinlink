@@ -411,6 +411,22 @@ def _born_before(a, b):
     return None
 
 
+def _cousin_by_age(res, A, B):
+    """表親依生日分大小（總幹事 2026-10-12：比照堂兄／堂弟）：表兄弟→表哥／表弟、表姊妹→表姊／表妹。
+    兩人生日判不出長幼（_born_before 回 None）就照舊用通稱，不推定。res 是 A 對 B 的結果（forward＝A 稱 B）。"""
+    older = _elder_than(B, A)            # B 比 A 年長？
+    if older is None:
+        return res
+
+    def one(t, elder):
+        if t == "表兄弟":
+            return "表哥" if elder else "表弟"
+        if t == "表姊妹":
+            return "表姊" if elder else "表妹"
+        return t
+    return dict(res, forward=one(res["forward"], older), backward=one(res["backward"], not older))
+
+
 def _unknown_elder(path, same_gen=False, sibling=False):
     """長幼判不出（缺生年）→ 雙向一律「族親」。
     總幹事 2026-08-21 拍板：生年資料不可控，不依建檔序推定、不加註，省得困擾。
@@ -572,11 +588,11 @@ def _kin_bridge(conn, A, B) -> dict | None:
         if r:
             f = _MOTHER_CHILD.get(r["forward"], {}).get(g_b)
             if f:
-                return {
+                return _cousin_by_age({
                     "forward": f,
                     "backward": _VIA_MOTHER.get(r["backward"]) or "姻親",
                     "path": "經母親「%s」橋接：%s" % (mb["name"], r["path"]),
-                }
+                }, A, B)
     # 主體側母親橋接：A 經母親連回本族（同上，有登錄父親也照走）
     if ma and ma["id"] != B["id"]:
         r = _kin_blood(conn, ma, B)
@@ -589,11 +605,11 @@ def _kin_bridge(conn, A, B) -> dict | None:
         if r:
             f = _VIA_MOTHER.get(r["forward"])
             if f:
-                return {
+                return _cousin_by_age({
                     "forward": f,
                     "backward": _MOTHER_CHILD.get(r["backward"], {}).get(g_a) or "姻親",
                     "path": "經母親「%s」橋接：%s" % (ma["name"], r["path"]),
-                }
+                }, A, B)
     return None
 
 

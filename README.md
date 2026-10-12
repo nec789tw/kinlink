@@ -95,4 +95,4 @@
 
 ---
 
-**維護者**：元新電腦（[nec789tw](https://github.com/nec789tw)）
+**維護者**：元新電腦（[nec789tw](https://github.com/nec789tw)）。元新電腦店主是楊士芳進士家族的後代，也曾任家族總幹事。

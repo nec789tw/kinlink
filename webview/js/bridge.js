@@ -572,23 +572,26 @@
   }
 
   /* 祭祖活動（虛構示範），符合 GET /api/events 契約欄位。
-     calendar：'SOLAR'/'LUNAR'；date：依曆法之原始日期字串（編輯器回填用）。 */
+     calendar：'SOLAR'/'LUNAR'；date：依曆法之原始日期字串（編輯器回填用）。
+     lunarDate 照正式版 kinlink/lunar.py solar_to_lunar_cn 的換算與格式（干支年＋中文月日）——
+     展示模式沒有農曆換算，舊版手寫的「農曆三月初八」對不上真曆（2026-10-12 官網截圖時抓到）；
+     tests/test_l4_mock_parity.py 會拿正式版換算比對，改日期記得一起改。 */
   var EVENTS = [
     { id: 1, name: '清明掃墓・楊家祖塋', calendar: 'SOLAR', date: '2026-04-05',
-      solarDate: '2026-04-05', lunarDate: '農曆三月初八',
+      solarDate: '2026-04-05', lunarDate: '丙午年二月十八',
       location: '松柏嶺墓園正門牌坊', deceasedId: 1,
       time: '上午 08:30',
       note: '請攜帶清香、鮮花與供果；祭掃後於園區茶寮共進午膳。',
       // 掃墓通函「說明」多行內文（一行一條，列印時自動編號；純虛構示範）
       letterBody: '本年清明掃墓祭祖訂於國曆四月五日（星期日）上午八時三十分舉行。\n集合地點：松柏嶺墓園正門牌坊，請自備交通工具準時集合。\n祭掃後於園區茶寮共進午膳，敬請於三月二十日前回覆出席人數以便備餐。' },
     { id: 2, name: '先祖考 楊立宗 公 忌辰', calendar: 'SOLAR', date: '2026-07-18',
-      solarDate: '2026-07-18', lunarDate: '農曆六月初三',
+      solarDate: '2026-07-18', lunarDate: '丙午年六月初五',
       location: '楊氏宗祠 正廳', deceasedId: 1,
       time: '上午 10:00 行家祭禮',
       note: '由長房主祭，敬備三牲果品，請各房派員與祭。',
       letterBody: '' },
-    { id: 3, name: '中秋祭祖・闔家團圓', calendar: 'SOLAR', date: '2026-09-26',
-      solarDate: '2026-09-26', lunarDate: '農曆八月十五',
+    { id: 3, name: '中秋祭祖・闔家團圓', calendar: 'SOLAR', date: '2026-09-25',
+      solarDate: '2026-09-25', lunarDate: '丙午年八月十五',
       location: '楊氏宗祠 正廳', deceasedId: null,
       time: '下午 17:30 上香，18:30 圍爐團聚',
       note: '祭祖後合影留念，歡迎攜眷返鄉。',

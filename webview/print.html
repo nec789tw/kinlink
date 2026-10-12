@@ -6,34 +6,12 @@
   <title>繫族 列印</title>
   <!-- 版式契約：一律沿用 列印範本/assets/print.css（.sheet / .doc-title / table.grid / .missing / .no-print） -->
   <link rel="stylesheet" href="/列印範本/assets/print.css">
+  <!-- 穴排位圖的樣式與畫法跟 app「穴排位」頁共用（畫面看到的就是印出來的樣子） -->
+  <link rel="stylesheet" href="css/tomb.css">
+  <script src="js/tombdraw.js"></script>
   <style>
     /* 直系族譜表：照原版 xls 欄寬，短欄（關係、姓名、年號、農曆月日…）一行到底，備註吃剩下的寬度 */
     table.grid.lineage td:not(:last-child) { white-space: nowrap; }
-    /* 穴排位「面板」「階梯」版型（2026-10-12，照家族的穴排位圖）：紅底框、白格、黑線。
-       print-color-adjust:exact——不必另勾「背景圖形」，紅底也印得出來 */
-    .tomb-panels .tp-wrap { display: flex; justify-content: center; align-items: flex-start; gap: 5mm; margin-top: 3mm; }
-    .tomb-panels .tp-panel, .tomb-steps .ts-step { background: #c00000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .tomb-panels .tp-panel { padding: 4.5mm 4.5mm 6mm; }
-    .tomb-panels .tp-grid, .tomb-steps .ts-grid { border-collapse: collapse; background: #fff; }
-    .tomb-panels .tp-grid td { width: 15.5mm; height: 8.6mm; border: 1px solid #000; text-align: center;
-      vertical-align: bottom; padding: 0 1px 1px; }
-    .tomb-panels .tp-top { font-size: 6.5pt; line-height: 1.15; }
-    .tomb-panels .tp-nm { font-size: 11pt; font-weight: bold; line-height: 1.2; min-height: 1.2em; white-space: nowrap; }
-    .tomb-panels .tp-foot, .tomb-steps .ts-head { display: flex; justify-content: space-between; align-items: flex-start;
-      font-size: 11pt; font-weight: bold; }
-    .tomb-panels .tp-foot { margin-top: 3mm; }
-    .tomb-steps .ts-head { margin-bottom: 1mm; }
-    .tomb-panels .tp-date, .tomb-steps .ts-date { text-align: right; }
-    .tomb-steps .ts-addr { max-width: 70mm; }
-    .tomb-steps .ts-step { display: table; margin: 0 auto; padding: 0 7mm; }
-    .tomb-steps .ts-step:first-child { padding-top: 4mm; }
-    .tomb-steps .ts-step:last-child { padding-bottom: 4mm; }
-    .tomb-steps .ts-grid th { font-size: 7pt; font-weight: normal; border: 1px solid #000; height: 4mm; padding: 0; }
-    .tomb-steps .ts-grid th.n1 { font-size: 5pt; letter-spacing: -0.3pt; white-space: nowrap; }
-    .tomb-steps .ts-grid td { width: 8.6mm; height: 20.5mm; border: 1px solid #000; vertical-align: top; padding: 1.2mm 0 0; }
-    .tomb-steps .ts-v { writing-mode: vertical-rl; text-orientation: upright; font-size: 11.5pt; font-weight: bold;
-      letter-spacing: 0.4mm; margin: 0 auto; white-space: pre; }
-    .tomb-steps .ts-head { font-size: 10pt; line-height: 1.45; }
     /* 可點字修改：聚焦外框只用既有 token（--muted），列印時一律不出現 */
     #root [contenteditable="true"] { cursor: text; }
     #root [contenteditable="true"]:focus {
@@ -652,82 +630,11 @@
      ======================================================== */
   // i：第幾個場地（map 傳入）。第二個起由場地本身換頁（.page-break），不在場地之間
   // 插空的分頁 div——空 div 會自己落在一張直式空白頁上（print-2）。
-  // ── 穴排位「面板」「階梯」版型（2026-10-12，照家族 2022 年面板圖、2002 年主牌位圖）──
-  // 副標（日期）可用「／」分行：原圖農曆、西元各一行
-  function tombLines(t) { return String(t || '').split(/\s*[／\n]\s*/).filter(Boolean).map(esc).join('<br>'); }
-  function tombGridMap(s) { var g = {}; (s.cells || []).forEach(function (c) { g[c.r + ',' + c.c] = c; }); return g; }
-  // 面板：幾塊紅框格子並排（各塊列數可不同，頂端對齊）；每格上方小字（世代）＋名字
-  function renderTombPanels(s, i) {
-    var o = s.layoutOpts || {}, pc = o.panelCols || 3, pr = o.panelRows || [s.rows], g = tombGridMap(s);
-    var panels = pr.map(function (rows, p) {
-      var t = '';
-      for (var r = 0; r < rows; r++) {
-        t += '<tr>';
-        for (var k = 0; k < pc; k++) {
-          var cell = g[r + ',' + (p * pc + k)];
-          t += '<td>' + (cell && cell.top ? '<div class="tp-top">' + esc(cell.top) + '</div>' : '') +
-               '<div class="tp-nm">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
-        }
-        t += '</tr>';
-      }
-      return '<div class="tp-panel"><table class="tp-grid"><tbody>' + t + '</tbody></table></div>';
-    }).join('');
-    return '<div class="sheet landscape tomb-panels' + (i ? ' page-break' : '') + '">' +
-      '<div class="doc-title">' + esc(s.title || s.name || '穴排位圖') + '</div>' +
-      '<div class="tp-wrap">' + panels + '</div>' +
-      '<div class="tp-foot"><div>' + esc(s.footer || '') + '</div><div class="tp-date">' + tombLines(s.subtitle) + '</div></div>' +
-      foot('穴排位圖・' + (s.name || '')) +
-    '</div>';
-  }
-  // 階梯：一層一層往下加寬、置中；由右往左讀（c=0 在最右），每格直書；
-  // 同一層相鄰格子的上方小字相同就合成一條世代橫條，橫條字也由右往左排（原圖「世 三 十」＝十三世）
-  function bandTh(label, span) {                // 只有一格寬：原圖是小字擠一行（「世九十」）
-    return '<th colspan="' + span + '"' + (span === 1 ? ' class="n1"' : '') + '>' +
-           esc(chars(label).reverse().join(span === 1 ? '' : '　')) + '</th>';
-  }
-  function renderTombSteps(s, i) {
-    var w = (s.layoutOpts || {}).rowWidths || [], g = tombGridMap(s);
-    var steps = w.map(function (n, r) {
-      var band = '', cells = '', run = null, span = 0, anyTop = false;
-      for (var c = n - 1; c >= 0; c--) {           // 畫面由左到右＝c 由大到小
-        var cell = g[r + ',' + c], top = (cell && cell.top) || '';
-        if (top) anyTop = true;
-        if (run !== null && top !== run) { band += bandTh(run, span); span = 0; }
-        run = top; span++;
-        cells += '<td><div class="ts-v">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
-      }
-      if (span) band += bandTh(run, span);
-      return '<div class="ts-step"><table class="ts-grid"><tbody>' + (anyTop ? '<tr>' + band + '</tr>' : '') +
-             '<tr>' + cells + '</tr></tbody></table></div>';
-    }).join('');
-    return '<div class="sheet landscape tomb-steps' + (i ? ' page-break' : '') + '">' +
-      '<div class="doc-title">' + esc(s.title || s.name || '穴排位圖') + '</div>' +
-      '<div class="ts-head"><div class="ts-addr">' + esc(s.footer || '') + '</div><div class="ts-date">' + tombLines(s.subtitle) + '</div></div>' +
-      '<div class="ts-body">' + steps + '</div>' +
-      foot('穴排位圖・' + (s.name || '')) +
-    '</div>';
-  }
+  // 畫法在 js/tombdraw.js（跟 app「穴排位」頁共用）：面板、階梯照家族的穴排位圖，方格列標籤直書
   function renderTombGridOne(s, i) {
-    if (s.layout === 'panels') return renderTombPanels(s, i);
-    if (s.layout === 'steps') return renderTombSteps(s, i);
-    var grid = {};
-    for (var k = 0; k < (s.cells || []).length; k++) grid[s.cells[k].r + ',' + s.cells[k].c] = s.cells[k];
-    var rows = '';
-    for (var r = 0; r < s.rows; r++) {
-      rows += '<tr><th class="gen">' + esc((s.rowLabels || [])[r] || '') + '</th>';
-      for (var c = 0; c < s.cols; c++) {
-        var cell = grid[r + ',' + c];
-        rows += '<td>' + (cell ? esc(cell.label) : '') + '</td>';
-      }
-      rows += '</tr>';
-    }
-    return '<div class="sheet landscape' + (i ? ' page-break' : '') + '">' +
-      '<div class="doc-title">' + esc(s.title || s.name || '穴排位圖') + '</div>' +
-      (s.subtitle ? '<div class="doc-subtitle">' + esc(s.subtitle) + '</div>' : '') +
-      '<table class="tomb"><tbody>' + rows + '</tbody></table>' +
-      (s.footer ? '<div class="foot">' + esc(s.footer) + '</div>' : '') +
-      foot('穴排位圖・' + (s.name || '')) +
-    '</div>';
+    var d = TombDraw.render(s);
+    return '<div class="sheet landscape' + (d.cls ? ' ' + d.cls : '') + (i ? ' page-break' : '') + '">' + d.html +
+      foot('穴排位圖・' + (s.name || '')) + '</div>';
   }
   function renderTombGrid(siteId) {
     if (String(siteId) === 'all') {

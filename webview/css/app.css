@@ -487,18 +487,5 @@ button { font-family:inherit; }
 .hint-lunar { margin-top:4px; font-size:12.5px; color:var(--accent); min-height:16px; }
 .hint-lunar.warn { color:#b8860b; }
 
-/* ── 穴排位格子編輯（視圖 tomb；2026-08-21）── */
-.tomb-grid { margin-top:0; }
-.tomb-grid th.rl { text-align:center; white-space:nowrap; width:6em; }
-.tomb-grid td { cursor:pointer; text-align:center; min-width:6em; height:2.8em; padding:4px 6px; user-select:none; }
-.tomb-grid td.filled { background:var(--accent-soft); color:var(--ink); font-weight:600; }
-.tomb-grid td.txt { color:var(--muted); }
-.tomb-grid td:hover { outline:2px solid var(--accent); outline-offset:-2px; }
-/* 穴排位版型（面板／階梯）的編輯預覽：上方小字、直書、面板並排、階梯置中 */
-.tomb-grid td .tg-top { display:block; font-size:11px; font-weight:400; color:var(--muted); line-height:1.2; }
-.tomb-grid td.v { min-width:2.6em; height:7em; vertical-align:top; padding:4px 2px; }
-.tomb-grid td.v .tg-nm { writing-mode:vertical-rl; text-orientation:upright; display:inline-block; }
-.tomb-panels-ed { display:flex; gap:14px; align-items:flex-start; }
-.tomb-panels-ed .tomb-grid td { min-width:4.6em; }
-.tomb-steps-ed { display:flex; flex-direction:column; align-items:center; gap:6px; }
+/* ── 穴排位（視圖 tomb）：格子畫成跟列印一樣的紙張，樣式在 css/tomb.css（跟 print.html 共用）── */
 #tomb-cell-mask .modal { max-width:460px; }

@@ -4644,7 +4644,6 @@ window.createMemberPicker = function (opts) {
   var pick = window.createMemberPicker ? window.createMemberPicker({ placeholder: '搜尋姓名、字號或房頭…' }) : null;
   if(pick && cellPickMount) cellPickMount.appendChild(pick.el);
 
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function toast(m, t){ if(window.toast) window.toast(m, t); }
   function requireEdit(fn){ if(window.requireEdit) window.requireEdit(fn); else fn(); }
 
@@ -4728,48 +4727,23 @@ window.createMemberPicker = function (opts) {
     return (m.styleName || given) + '　' + sur + '公';
   }
 
-  function cellHtml(r, c, vert){
-    var cell = cur.cells[r + ',' + c];
-    var cls = (cell ? (cell.memberId ? 'filled' : 'txt') : '') + (vert ? ' v' : '');
-    return '<td class="' + cls + '" data-r="' + r + '" data-c="' + c + '" title="點一下編輯這一格">' +
-      (cell && cell.top ? '<span class="tg-top">' + esc(cell.top) + '</span>' : '') +
-      '<span class="tg-nm">' + (cell ? esc(cell.label || cell.text) : '') + '</span></td>';
-  }
+  // 跟列印同一套畫法（js/tombdraw.js）：畫面上看到的就是印出來的樣子，格子帶 data-r／data-c 可點編輯
+  //（2026-10-12 總幹事：列印看很直覺，app 要照列印重新設計；舊版每層都拉成一樣寬，看不出階梯）
   function renderGrid(){
     if(!cur){ gridWrap.innerHTML = ''; return; }
-    var o = cur.layoutOpts || {}, h, r, c;
-    if(cur.layout === 'panels'){                      // 面板：幾塊並排，各塊列數可不同
-      h = '<div class="tomb-panels-ed">';
-      o.panelRows.forEach(function(rows, p){
-        h += '<table class="ntc-table tomb-grid"><tbody>';
-        for(var rr = 0; rr < rows; rr++){
-          h += '<tr>';
-          for(var k = 0; k < o.panelCols; k++) h += cellHtml(rr, p * o.panelCols + k);
-          h += '</tr>';
-        }
-        h += '</tbody></table>';
-      });
-      gridWrap.innerHTML = h + '</div>';
-      return;
-    }
-    if(cur.layout === 'steps'){                       // 階梯：一層一列置中，由右往左（c=0 在最右），直書
-      h = '<div class="tomb-steps-ed">';
-      o.rowWidths.forEach(function(n, rr){
-        h += '<table class="ntc-table tomb-grid"><tbody><tr>';
-        for(var cc = n - 1; cc >= 0; cc--) h += cellHtml(rr, cc, true);
-        h += '</tr></tbody></table>';
-      });
-      gridWrap.innerHTML = h + '</div>';
-      return;
-    }
-    h = '<table class="ntc-table tomb-grid"><tbody>';
-    for(r = 0; r < cur.rows; r++){
-      h += '<tr><th class="rl">' + esc(labelAt(r)) + '</th>';
-      for(c = 0; c < cur.cols; c++) h += cellHtml(r, c);
-      h += '</tr>';
-    }
-    gridWrap.innerHTML = h + '</tbody></table>';
+    var d = window.TombDraw.render(cur, { edit: true });
+    gridWrap.innerHTML = '<div class="tomb-paper ' + d.cls + '">' + d.html + '</div>';
+    fitPaper();
   }
+  // 紙張比畫面寬時整張等比縮小（不出現左右捲軸）；視窗放大再放回原尺寸
+  function fitPaper(){
+    var p = gridWrap.firstChild;
+    if(!p || !p.style) return;
+    p.style.zoom = '';
+    var room = gridWrap.clientWidth - 4, need = p.offsetWidth;
+    if(room > 0 && need > room) p.style.zoom = String(Math.floor(room / need * 1000) / 1000);
+  }
+  window.addEventListener('resize', function(){ if(cur && !editor.hidden) fitPaper(); });
 
   // ── 格子小視窗 ──
   gridWrap.addEventListener('click', function(e){
@@ -4829,7 +4803,7 @@ window.createMemberPicker = function (opts) {
   }
   function openSite(id){
     return window.KinAPI.getTombSite(id).then(function(s){
-      cur = fromApi(s); fillForm(); renderGrid(); editor.hidden = false; takeSnap();
+      cur = fromApi(s); fillForm(); editor.hidden = false; renderGrid(); takeSnap();   // 先顯示再畫：縮放要量得到寬度
     }).catch(function(e){ toast('讀取場地失敗：' + e.message, 'err'); });
   }
 
@@ -4863,7 +4837,7 @@ window.createMemberPicker = function (opts) {
   btnAdd.addEventListener('click', function(){
     requireEdit(function(){
       if(!confirmDiscardSite()) return;
-      cur = blank(); fillForm(); renderGrid(); editor.hidden = false; sel.value = ''; takeSnap(); fName.focus();
+      cur = blank(); fillForm(); editor.hidden = false; renderGrid(); sel.value = ''; takeSnap(); fName.focus();
     });
   });
   // 列數／欄數／列標籤：邊打邊重畫格子（2026-09-09 使用者回報「打入行x列時欄位沒有即時變更」，
@@ -4875,7 +4849,8 @@ window.createMemberPicker = function (opts) {
     if(liveT) clearTimeout(liveT);
     liveT = setTimeout(function(){ if(!cur) return; readForm({ typing: true }); renderGrid(); }, 180);
   }
-  [fRows, fCols, fLabels, fShape, fPcols].forEach(function(el){
+  // 抬頭、副標（日期）、頁尾（地址）也印在紙上，一樣邊打邊重畫
+  [fRows, fCols, fLabels, fShape, fPcols, fName, fTitle, fSub, fFoot].forEach(function(el){
     if(!el) return;
     el.addEventListener('input', liveResize);
     el.addEventListener('change', function(){

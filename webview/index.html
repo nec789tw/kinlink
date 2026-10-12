@@ -7,6 +7,7 @@
   <!-- 本系統離線運作，不連任何外部資源：字型一律用系統既有字族（見 app.css --font-*）。
        （原本連 Google Fonts CDN，在無網路的隨身碟情境只會拖慢啟動並靜默退化。） -->
   <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/tomb.css">
 </head>
 <body>
   <div class="app">
@@ -361,6 +362,20 @@
           </div>
 
           <div class="card" id="tomb-editor" hidden style="margin-top:14px">
+            <!-- 2026-10-12 總幹事：列印看很直覺，app 要照列印重新設計 → 格子畫成跟印出來一樣的紙張，放最上面 -->
+            <div id="tomb-grid-wrap" style="overflow:auto;text-align:center;padding:4px 2px 8px"></div>
+            <div class="d" style="margin-top:8px">這裡看到的就是印出來的樣子。點格子：選族親或打自由文字（走道、神位、外姓）；<b>灰字</b>＝沒連到族譜裡的人（印出來仍是黑字）。改完記得按「儲存」。</div>
+            <div class="controls">
+              <!-- 「套用尺寸／標籤」鈕已移除（2026-09-09）：列數／欄數／列標籤改成邊打邊即時重畫，
+                   留著會讓人以為非按不可。app.js 仍保留 if(btnApply) 的綁定，舊版畫面不會壞。 -->
+              <button class="btn btn-sm" id="tomb-export" type="button">匯出 CSV</button>
+              <label class="btn btn-sm edit-only" for="tomb-import-file" style="cursor:pointer">匯入 CSV（覆寫）</label>
+              <input id="tomb-import-file" type="file" accept=".csv,text/csv" hidden>
+              <div class="sp"></div>
+              <button class="btn btn-danger btn-sm edit-only" id="tomb-delete" type="button">刪除場地</button>
+              <button class="btn btn-primary btn-sm edit-only" id="tomb-save" type="button">儲存</button>
+            </div>
+            <div class="sec-title" style="margin-top:18px">版面設定（改了上面的圖會跟著變）</div>
             <div class="mform-2col">
               <div class="field">
                 <div class="lbl">場地名稱（也是分頁名）</div>
@@ -403,22 +418,10 @@
                 <input class="input" id="tomb-f-shape" type="text" autocomplete="off">
               </div>
               <div class="field" style="grid-column:1/-1">
-                <div class="lbl">列標籤（逗號分隔，例：第11世,第12世,第13世；留空自動「第N列」。改列數／欄數／標籤時格子會即時重畫）</div>
+                <div class="lbl">列標籤（逗號分隔，例：第11世,第12世,第13世；印在每列最左邊，留空就不印）</div>
                 <input class="input" id="tomb-f-labels" type="text" autocomplete="off">
               </div>
             </div>
-            <div class="controls">
-              <!-- 「套用尺寸／標籤」鈕已移除（2026-09-09）：列數／欄數／列標籤改成邊打邊即時重畫，
-                   留著會讓人以為非按不可。app.js 仍保留 if(btnApply) 的綁定，舊版畫面不會壞。 -->
-              <button class="btn btn-sm" id="tomb-export" type="button">匯出 CSV</button>
-              <label class="btn btn-sm edit-only" for="tomb-import-file" style="cursor:pointer">匯入 CSV（覆寫）</label>
-              <input id="tomb-import-file" type="file" accept=".csv,text/csv" hidden>
-              <div class="sp"></div>
-              <button class="btn btn-danger btn-sm edit-only" id="tomb-delete" type="button">刪除場地</button>
-              <button class="btn btn-primary btn-sm edit-only" id="tomb-save" type="button">儲存</button>
-            </div>
-            <div id="tomb-grid-wrap" style="overflow:auto;margin-top:10px"></div>
-            <div class="d" style="margin-top:8px">點格子：選族親或打自由文字（走道、神位、外姓）；藍底＝已指到族親，印出時自動套「字號　姓公／名　姓氏」。改完記得按「儲存」。</div>
           </div>
 
           <!-- 格子編輯小視窗 -->
@@ -1083,6 +1086,7 @@
   <div class="toast-host" id="toast-host" aria-live="polite"></div>
 
   <script src="js/bridge.js"></script>
+  <script src="js/tombdraw.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

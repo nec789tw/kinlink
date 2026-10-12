@@ -1,0 +1,42 @@
+/* 穴排位圖樣式——列印頁（print.html）與 app「穴排位」頁共用（畫法在 js/tombdraw.js）。
+   面板／階梯照家族的穴排位圖（2026-10-12）：紅底框、白格、黑線。
+   print-color-adjust:exact——不必另勾「背景圖形」，紅底也印得出來 */
+.tomb-panels .tp-wrap { display: flex; justify-content: center; align-items: flex-start; gap: 5mm; margin-top: 3mm; }
+.tomb-panels .tp-panel, .tomb-steps .ts-step { background: #c00000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.tomb-panels .tp-panel { padding: 4.5mm 4.5mm 6mm; }
+.tomb-panels .tp-grid, .tomb-steps .ts-grid { border-collapse: collapse; background: #fff; }
+.tomb-panels .tp-grid td { width: 15.5mm; height: 8.6mm; border: 1px solid #000; text-align: center;
+  vertical-align: bottom; padding: 0 1px 1px; }
+.tomb-panels .tp-top { font-size: 6.5pt; line-height: 1.15; }
+.tomb-panels .tp-nm { font-size: 11pt; font-weight: bold; line-height: 1.2; min-height: 1.2em; white-space: nowrap; }
+.tomb-panels .tp-foot, .tomb-steps .ts-head { display: flex; justify-content: space-between; align-items: flex-start;
+  font-size: 11pt; font-weight: bold; }
+.tomb-panels .tp-foot { margin-top: 3mm; }
+.tomb-steps .ts-head { margin-bottom: 1mm; }
+.tomb-panels .tp-date, .tomb-steps .ts-date { text-align: right; }
+.tomb-steps .ts-addr { max-width: 70mm; }
+.tomb-steps .ts-step { display: table; margin: 0 auto; padding: 0 7mm; }
+.tomb-steps .ts-step:first-child { padding-top: 4mm; }
+.tomb-steps .ts-step:last-child { padding-bottom: 4mm; }
+.tomb-steps .ts-grid th { font-size: 7pt; font-weight: normal; border: 1px solid #000; height: 4mm; padding: 0; }
+.tomb-steps .ts-grid th.n1 { font-size: 5pt; letter-spacing: -0.3pt; white-space: nowrap; }
+.tomb-steps .ts-grid td { width: 8.6mm; height: 20.5mm; border: 1px solid #000; vertical-align: top; padding: 1.2mm 0 0; }
+.tomb-steps .ts-v { writing-mode: vertical-rl; text-orientation: upright; font-size: 11.5pt; font-weight: bold;
+  letter-spacing: 0.4mm; margin: 0 auto; white-space: pre; }
+.tomb-steps .ts-head { font-size: 10pt; line-height: 1.45; }
+
+/* ── app「穴排位」頁：一張白紙，字型、抬頭、方格線照 列印範本/assets/print.css（不跟深色主題變色）── */
+/* width:max-content——畫面窄時不准把格子擠扁（會跟印出來不一樣），由 app.js fitPaper 整張等比縮小 */
+.tomb-paper { display: inline-block; width: max-content; text-align: left; background: #fff; color: #1a1a1a; padding: 6mm 8mm;
+  font-family: "標楷體", "DFKai-SB", "BiauKai", "KaiTi", "AR PL UKai TW", serif;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .25); border-radius: 2px; }
+.tomb-paper .doc-title { text-align: center; font-size: 16pt; font-weight: bold; letter-spacing: 3pt; margin: 0 0 8pt; }
+.tomb-paper .doc-subtitle { text-align: center; font-size: 11pt; color: #555; margin-bottom: 10pt; }
+.tomb-paper table.tomb { border-collapse: collapse; font-size: 10pt; margin: 0 auto; }
+.tomb-paper table.tomb td, .tomb-paper table.tomb th { border: 1px solid #333; padding: 3pt 5pt; text-align: center; min-width: 3.4em; height: 1.4em; }
+.tomb-paper table.tomb th.gen { background: #ececec; writing-mode: vertical-rl; white-space: nowrap; }
+.tomb-paper .foot { margin-top: 10pt; font-size: 9pt; color: #555; text-align: right; }
+/* 可點的格子：滑過出現外框；灰字＝自由文字（沒連到族譜裡的人），印出來仍是黑字 */
+.tomb-paper td[data-r] { cursor: pointer; }
+.tomb-paper td[data-r]:hover { outline: 2px solid #2563eb; outline-offset: -2px; }
+.tomb-paper td.txt { color: #8a8a8a; }

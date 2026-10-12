@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-edit="off">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>繫族 KinLink</title>
+  <!-- 本系統離線運作，不連任何外部資源：字型一律用系統既有字族（見 app.css --font-*）。
+       （原本連 Google Fonts CDN，在無網路的隨身碟情境只會拖慢啟動並靜默退化。） -->
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="11" height="8" rx="4"/><rect x="9.5" y="8" width="11" height="8" rx="4"/></svg>
+        </div>
+        <div class="name">繫族</div>
+      </div>
+
+      <nav class="nav">
+        <button type="button" class="nav-item active" data-view="tree">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.4"/><circle cx="5.5" cy="18.5" r="2.4"/><circle cx="18.5" cy="18.5" r="2.4"/><path d="M12 7.4v3.2M12 10.6H5.5v5.5M12 10.6h6.5v5.5"/></svg>
+          <span class="lbl">族譜</span>
+        </button>
+        <button type="button" class="nav-item" data-view="kin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="2.6"/><circle cx="17" cy="7" r="2.6"/><path d="M9.5 7h5"/><path d="M7 9.6V13a3 3 0 0 0 3 3h0"/><path d="M17 9.6V13a3 3 0 0 1-3 3h0"/><circle cx="12" cy="18.4" r="2.6"/></svg>
+          <span class="lbl">稱謂</span>
+        </button>
+        <button type="button" class="nav-item" data-view="ritual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 1.4 2.5 3 2.5 4.6 0 1.6-1.1 2.6-2.5 2.6S9.5 9.2 9.5 7.6C9.5 6 10.4 4.4 12 3z"/><path d="M7 14h10l-1 6H8l-1-6z"/><path d="M5 14h14"/></svg>
+          <span class="lbl">祭祖</span>
+        </button>
+        <button type="button" class="nav-item" data-view="tomb">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+          <span class="lbl">穴排位</span>
+        </button>
+        <button type="button" class="nav-item" data-view="print">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg>
+          <span class="lbl">列印</span>
+        </button>
+        <button type="button" class="nav-item" data-view="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="lbl">設定</span>
+        </button>
+        <button type="button" class="nav-item" data-view="about">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+          <span class="lbl">關於</span>
+        </button>
+      </nav>
+
+      <div class="side-foot">
+        <div class="lock-state" id="lock-state">
+          <span class="dot"></span>
+          <span class="lock-state-txt">瀏覽模式</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <h1 id="view-title">族譜</h1>
+        <div class="ctx" id="view-ctx"></div>
+      </header>
+
+      <!-- 編輯模式常駐狀態列：解鎖後才顯示，與瀏覽模式明確區隔，避免誤改而不自覺 -->
+      <div class="editbar edit-only" id="edit-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span><b>編輯模式進行中</b>　資料會即時存檔；完成後請鎖定，避免誤改。</span>
+        <span id="edit-bar-scope" class="chip chip-muted" hidden></span>
+        <div class="sp"></div>
+        <button class="btn btn-sm btn-ghost" id="edit-bar-lock" type="button">完成，鎖定</button>
+      </div>
+
+      <div class="view-host">
+        <section class="view active" data-view="tree">
+          <div class="tree-toolbar">
+            <input id="tree-search" class="input search" type="search" placeholder="搜尋姓名、字號或房頭…" autocomplete="off">
+            <div class="seg" id="tree-seg" role="tablist" aria-label="檢視切換">
+              <button type="button" class="on" data-mode="list">列表</button>
+              <button type="button" data-mode="diagram">樹狀</button>
+            </div>
+            <!-- 列表專用（切到樹狀圖時隱藏）：一次展開／收合整份列表（總幹事 2026-10-04 要的） -->
+            <button type="button" id="tree-expand-all" class="btn btn-ghost btn-sm" data-listonly>全部展開</button>
+            <button type="button" id="tree-collapse-all" class="btn btn-ghost btn-sm" data-listonly>全部收合</button>
+            <!-- 房頭選項由 app.js 依 KinAPI.getSettings().branches 動態產生（不再硬編房名） -->
+            <select id="tree-branch" class="select" aria-label="房頭篩選">
+              <option value="">全部房頭</option>
+            </select>
+            <!-- 各房始祖快速跳轉：按鈕依「設定 → 房頭清單」產生（各家族通用，不寫死房名）；沒設房頭就不顯示 -->
+            <div class="branch-jump" id="tree-branch-jump" role="group" aria-label="跳到各房始祖" hidden></div>
+            <!-- 常駐可見：瀏覽模式弱化＋鎖形提示，點擊由 requireEdit 引導解鎖 -->
+            <button type="button" id="tree-add" class="btn btn-primary btn-sm locked-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              新增成員
+            </button>
+          </div>
+
+          <div class="tree-layout" id="tree-layout">
+            <div class="tree" id="tree-list" role="tree" aria-label="族譜"></div>
+
+            <!-- 樹狀圖檢視：與列表同一格位，由「列表／樹狀」seg 切換顯示
+                 （手寫 SVG＋vanilla JS，離線可用；內容由 app.js 動態產生） -->
+            <div class="tree-svg" id="tree-dg" hidden>
+              <!-- 操作列放在 svg 外面：按鈕不會被拖曳判定吃掉；長輩不必知道「滾輪可以縮放」 -->
+              <div class="dg-bar" id="tree-dg-bar">
+                <div class="seg" id="tree-dg-mode" role="tablist" aria-label="樹狀圖檢視">
+                  <button type="button" class="on" data-dgmode="overview">全族總覽</button>
+                  <button type="button" data-dgmode="family">本支家系</button>
+                </div>
+                <div class="sp"></div>
+                <button type="button" class="btn btn-ghost btn-sm" data-dg="out" aria-label="縮小">－ 縮小</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-dg="in" aria-label="放大">＋ 放大</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-dg="fit">回到預設大小</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-dg="all">看全貌</button>
+                <button type="button" class="btn btn-ghost btn-sm" data-dg="find" disabled>找到選取的人</button>
+              </div>
+              <div class="dg-canvas">
+                <svg id="tree-dg-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="族譜樹狀圖">
+                  <g id="tree-dg-vp"></g>
+                </svg>
+              </div>
+              <div class="tree-svg-legend" id="tree-dg-legend"></div>
+            </div>
+
+            <div class="card">
+              <div class="member-detail" id="tree-detail">
+                <div class="md-head">
+                  <div class="ava" id="tree-md-ava"></div>
+                  <div class="who">
+                    <div class="nm" id="tree-md-nm">—</div>
+                    <div class="sub" id="tree-md-sub">請在族譜中點選一位成員</div>
+                  </div>
+                  <!-- 常駐可見：未選人時 disabled；瀏覽模式點擊由 requireEdit 引導解鎖後開表單 -->
+                  <button type="button" id="tree-md-edit" class="btn btn-ghost btn-sm locked-hint" style="margin-left:auto" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    編輯
+                  </button>
+                </div>
+                <!-- 選了有子孫的人才出現：把他底下的子孫一次展開（列表、樹狀圖都可用） -->
+                <div class="md-actions"><button type="button" id="tree-md-expand" class="btn btn-ghost btn-sm" hidden>展開這一支</button></div>
+                <div class="md-grid" id="tree-md-grid"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view="kin">
+          <div class="sec-title">稱謂計算器</div>
+
+          <div class="banner banner-info" style="margin-bottom:14px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+            <span>選擇「主體」與「目標」兩位族人，計算出彼此互稱的稱謂與親屬關係鏈。資料取自目前的族譜。</span>
+          </div>
+
+          <div class="card">
+            <div class="kin-pick">
+              <div class="who-pick">
+                <div class="lbl">主體（你）</div>
+                <div id="kin-a"></div>
+              </div>
+
+              <button class="kin-swap" id="kin-swap" type="button" title="對調主體／目標" aria-label="對調主體與目標">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 4 7l3 3"/><path d="M4 7h13a3 3 0 0 1 3 3v0"/><path d="m17 20 3-3-3-3"/><path d="M20 17H7a3 3 0 0 1-3-3v0"/></svg>
+              </button>
+
+              <div class="who-pick">
+                <div class="lbl">目標（對方）</div>
+                <div id="kin-b"></div>
+              </div>
+            </div>
+
+            <div class="controls" style="margin-bottom:0;">
+              <div class="sp"></div>
+              <button class="btn btn-primary" id="kin-calc" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 11h2M12 11h2M16 11h.01"/><path d="M8 15h2M12 15h2M16 15h.01"/></svg>
+                計算稱謂
+              </button>
+            </div>
+
+            <div class="kin-result" id="kin-result">
+              <div class="kin-card">
+                <div class="dir">你稱對方</div>
+                <div class="term" id="kin-term-a">—</div>
+              </div>
+              <div class="kin-card">
+                <div class="dir">對方稱你</div>
+                <div class="term" id="kin-term-b">—</div>
+              </div>
+              <div class="kin-path" id="kin-path">請選擇兩位族人後計算。</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view="ritual">
+          <div class="sec-title">祭祖活動</div>
+
+          <!-- 「新增祭祖活動」常駐可見（requireEdit 引導解鎖）；「編輯模式」chip 仍僅編輯模式顯示 -->
+          <div class="controls" style="margin-top:0">
+            <span class="chip chip-muted edit-only">編輯模式</span>
+            <div class="sp"></div>
+            <button class="btn btn-primary btn-sm locked-hint" id="ritual-add" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              新增祭祖活動
+            </button>
+          </div>
+
+          <div id="ritual-events"></div>
+
+          <!-- 編輯模式才顯示：活動新增／編輯表單 -->
+          <div class="card edit-only" id="ritual-editor" hidden style="margin-top:14px">
+            <div class="sec-title" id="ritual-editor-title" style="margin-top:0">新增祭祖活動</div>
+
+            <div class="field">
+              <div class="lbl" style="font-size:12px;color:var(--ink-2);margin-bottom:6px">活動名稱</div>
+              <input class="input" id="ritual-f-name" type="text" placeholder="例：清明掃墓・祖塋">
+            </div>
+
+            <!-- 曆法排在日期之前：先決定用哪種曆，日期欄才會換成對應的輸入方式 -->
+            <div class="field">
+              <div class="lbl" style="font-size:12px;color:var(--ink-2);margin-bottom:6px">曆法</div>
+              <div class="seg" id="ritual-f-cal" role="group" aria-label="曆法">
+                <button type="button" data-cal="SOLAR" class="on">國曆</button>
+                <button type="button" data-cal="LUNAR">農曆</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="lbl" style="font-size:12px;color:var(--ink-2);margin-bottom:6px">日期</div>
+              <!-- 國曆走瀏覽器原生月曆；農曆走年＋月／日下拉（原生月曆是國曆，選農曆時不能用） -->
+              <input class="input" id="ritual-f-date" type="date">
+              <div class="hint-lunar" id="ritual-f-solar-lunar"></div>
+              <div id="ritual-f-lunar" hidden style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input class="input" id="ritual-f-ly" type="number" min="1900" max="2099" step="1" placeholder="年（西元）" style="width:130px">
+                <select class="select" id="ritual-f-lm" aria-label="農曆月"></select>
+                <select class="select" id="ritual-f-ld" aria-label="農曆日"></select>
+                <span id="ritual-f-lhint" style="font-size:12px;color:var(--muted)"></span>
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="lbl" style="font-size:12px;color:var(--ink-2);margin-bottom:6px">祭祀先人（選填）</div>
+              <div id="ritual-f-deceased"></div>
+              <div style="font-size:11.5px;color:var(--faint);margin-top:4px">
+                填了之後，通函受文者會寫「○○後裔族親」，訊息模板的 {裔稱} 也才算得出「裔孫／裔孫女」等稱謂；留空＝合祭，一律稱「全體族親／宗親」。
+              </div>
+            </div>
+
+            <div class="field">
+              <div class="lbl" style="font-size:12px;color:var(--ink-2);margin-bottom:6px">集合地點</div>
+              <input class="input" id="ritual-f-location" type="text" placeholder="例：松柏嶺墓園正門牌坊">
+            </div>
+
+            <div class="field">
+              <div class="lbl" style="font-size:12px;color:var(--ink-2);margin-bottom:6px">備註</div>
+              <input class="input" id="ritual-f-note" type="text" placeholder="例：請攜帶清香、鮮花與供果">
+            </div>
+
+            <div class="field">
+              <div class="lbl" style="font-size:12px;color:var(--ink-2);margin-bottom:6px">通函說明（一行一條，列印自動編「一、二、…」；行首空一格＝子項：縮排不佔編號）</div>
+              <textarea class="input" id="ritual-f-letter" style="min-height:96px;resize:vertical" placeholder="例：&#10;時　間：○月○日（星期○）上午九時整。&#10;地　點：祖塋牌坊前，請自備交通工具。&#10;餐會地點：○○餐廳。&#10;　餐會報名：請向總幹事報名（行首空一格＝子項）。"></textarea>
+            </div>
+
+            <div class="controls" style="margin-bottom:0">
+              <button class="btn btn-primary btn-sm" id="ritual-f-save" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+                儲存活動
+              </button>
+              <button class="btn btn-ghost btn-sm" id="ritual-f-cancel" type="button">取消</button>
+            </div>
+          </div>
+
+          <div class="sec-title">訊息通知作業台（逐人訊息／名單匯出；紙本寄送請用活動卡「列印通知單」）</div>
+
+          <div class="card">
+            <div class="controls">
+              <div class="who-pick" style="flex:1;min-width:200px">
+                <div class="lbl" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">祭祖活動</div>
+                <select class="select" id="ritual-event" style="width:100%"></select>
+              </div>
+              <div class="who-pick" style="min-width:250px">
+                <div class="lbl" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">通知範圍</div>
+                <div class="seg" id="ritual-scope">
+                  <button type="button" class="on" data-scope="all">全族在世</button>
+                  <button type="button" data-scope="branch">某房</button>
+                  <button type="button" data-scope="custom">自訂名單</button>
+                </div>
+              </div>
+              <div class="who-pick" id="ritual-branch-wrap" style="min-width:130px" hidden>
+                <div class="lbl" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">房頭</div>
+                <!-- 選項由 app.js 的 KinBranches 依 settings.branches 填入；第一個空值選項保留 -->
+                <select class="select" id="ritual-scope-branch" style="width:100%">
+                  <option value="">請選擇房頭</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="ritual-gen" style="align-self:flex-end">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h10M7 17h6"/></svg>
+                產生通知清單
+              </button>
+            </div>
+
+            <div id="ritual-custom-wrap" hidden style="margin-top:4px">
+              <div class="lbl" style="font-size:11.5px;color:var(--muted);margin-bottom:6px">搜尋加入收件人（可多位）</div>
+              <div id="ritual-scope-pick"></div>
+              <div id="ritual-scope-chips" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+            </div>
+
+            <div class="edit-only" style="margin-top:12px">
+              <div class="hint-head" style="margin:0 0 6px">
+                <div class="l"><span class="t" style="font-size:13px;font-weight:600">訊息模板</span>
+                <span class="d" id="ritual-tpl-vars" style="font-size:11.5px;color:var(--faint)">佔位符：{姓名} {活動} {國曆} {農曆} {地點} {備註}</span></div>
+                <button class="btn btn-ghost btn-sm" id="ritual-tpl-save" type="button">儲存模板</button>
+              </div>
+              <textarea class="input" id="ritual-tpl" style="min-height:84px;resize:vertical"></textarea>
+            </div>
+
+            <div class="banner banner-info" id="ritual-hint" style="margin-top:12px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+              <span>選活動與範圍後「產生通知清單」：每位收件人一則個別化訊息，可逐一複製、全部複製，或匯出名單交由各房轉傳。</span>
+            </div>
+
+            <div class="controls">
+              <button class="btn btn-primary" id="ritual-copy-all" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                複製全部
+              </button>
+              <button class="btn btn-ghost" id="ritual-csv" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M12 9v8"/><path d="M8.5 13.5 12 17l3.5-3.5"/></svg>
+                匯出名單 CSV
+              </button>
+              <!-- 紙本通知名單（一支一份，選家長）請走「列印」頁；此作業台專責逐人訊息與名單匯出 -->
+              <div class="sp"></div>
+              <span class="chip chip-muted" id="ritual-count">0 位</span>
+            </div>
+
+            <table class="ntc-table" id="ritual-list-table" hidden>
+              <thead><tr><th style="width:120px">姓名</th><th style="width:150px">電話</th><th>個別化訊息</th><th style="width:64px">操作</th></tr></thead>
+              <tbody id="ritual-list"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="view" data-view="tomb">
+          <div class="sec-title">穴排位（場地格線）</div>
+
+          <div class="banner banner-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></svg>
+            <div>一個場地＝一張要印的格子表。先選版型（方格、面板、階梯）並設定大小，再點格子把族親放進去；<b>格子怎麼畫，印出來就怎麼樣</b>，程式不替你決定誰該在哪一格。葬在場地外的族親不用進格子——在成員表單填「安葬地點／穴位編號」即可。</div>
+          </div>
+
+          <div class="controls" style="margin-top:0">
+            <select id="tomb-site-sel" class="select" aria-label="選擇穴排位場地" style="min-width:260px"></select>
+            <button class="btn btn-sm" id="tomb-print" type="button">列印此場地</button>
+            <button class="btn btn-sm" id="tomb-print-all" type="button">列印全部</button>
+            <div class="sp"></div>
+            <span class="chip chip-muted edit-only">編輯模式</span>
+            <button class="btn btn-primary btn-sm locked-hint" id="tomb-add" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+              新增場地
+            </button>
+          </div>
+
+          <div class="card" id="tomb-editor" hidden style="margin-top:14px">
+            <div class="mform-2col">
+              <div class="field">
+                <div class="lbl">場地名稱（也是分頁名）</div>
+                <input class="input" id="tomb-f-name" type="text" placeholder="例：示範墓園・1985年入穴" autocomplete="off">
+              </div>
+              <div class="field">
+                <div class="lbl">列印抬頭</div>
+                <input class="input" id="tomb-f-title" type="text" placeholder="例：○氏高祖墳墓穴排位圖" autocomplete="off">
+              </div>
+              <div class="field">
+                <div class="lbl">副標（入穴日／門號）</div>
+                <input class="input" id="tomb-f-subtitle" type="text" placeholder="例：農曆 73年12月13日／西元 1985/02/02（入穴）　37門" autocomplete="off">
+              </div>
+              <div class="field">
+                <div class="lbl">頁尾（地址）</div>
+                <input class="input" id="tomb-f-footer" type="text" placeholder="例：地址：○○市○○里○○路一段1號（後面）" autocomplete="off">
+              </div>
+              <div class="field">
+                <div class="lbl">列數（1–60）</div>
+                <input class="input" id="tomb-f-rows" type="number" min="1" max="60" inputmode="numeric">
+              </div>
+              <div class="field">
+                <div class="lbl">欄數（1–60）</div>
+                <input class="input" id="tomb-f-cols" type="number" min="1" max="60" inputmode="numeric">
+              </div>
+              <div class="field">
+                <div class="lbl">版型</div>
+                <select class="select" id="tomb-f-layout" aria-label="穴排位版型">
+                  <option value="grid">方格（列標籤在左）</option>
+                  <option value="panels">面板（幾塊紅框並排，每格上方小字寫世代）</option>
+                  <option value="steps">階梯（主牌位：一層比一層寬，由右往左直書）</option>
+                </select>
+              </div>
+              <div class="field" id="tomb-f-pcols-wrap" hidden>
+                <div class="lbl">每塊欄數</div>
+                <input class="input" id="tomb-f-pcols" type="number" min="1" max="20" inputmode="numeric">
+              </div>
+              <div class="field" id="tomb-f-shape-wrap" hidden style="grid-column:1/-1">
+                <div class="lbl" id="tomb-f-shape-lbl">各塊列數</div>
+                <input class="input" id="tomb-f-shape" type="text" autocomplete="off">
+              </div>
+              <div class="field" style="grid-column:1/-1">
+                <div class="lbl">列標籤（逗號分隔，例：第11世,第12世,第13世；留空自動「第N列」。改列數／欄數／標籤時格子會即時重畫）</div>
+                <input class="input" id="tomb-f-labels" type="text" autocomplete="off">
+              </div>
+            </div>
+            <div class="controls">
+              <!-- 「套用尺寸／標籤」鈕已移除（2026-09-09）：列數／欄數／列標籤改成邊打邊即時重畫，
+                   留著會讓人以為非按不可。app.js 仍保留 if(btnApply) 的綁定，舊版畫面不會壞。 -->
+              <button class="btn btn-sm" id="tomb-export" type="button">匯出 CSV</button>
+              <label class="btn btn-sm edit-only" for="tomb-import-file" style="cursor:pointer">匯入 CSV（覆寫）</label>
+              <input id="tomb-import-file" type="file" accept=".csv,text/csv" hidden>
+              <div class="sp"></div>
+              <button class="btn btn-danger btn-sm edit-only" id="tomb-delete" type="button">刪除場地</button>
+              <button class="btn btn-primary btn-sm edit-only" id="tomb-save" type="button">儲存</button>
+            </div>
+            <div id="tomb-grid-wrap" style="overflow:auto;margin-top:10px"></div>
+            <div class="d" style="margin-top:8px">點格子：選族親或打自由文字（走道、神位、外姓）；藍底＝已指到族親，印出時自動套「字號　姓公／名　姓氏」。改完記得按「儲存」。</div>
+          </div>
+
+          <!-- 格子編輯小視窗 -->
+          <div class="modal-mask" id="tomb-cell-mask" hidden>
+            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tomb-cell-title">
+              <h3 id="tomb-cell-title">格子</h3>
+              <div class="field">
+                <div class="lbl">族親（可留空）</div>
+                <div id="tomb-cell-pick"></div>
+              </div>
+              <div class="field">
+                <div class="lbl">上方小字（例：十五世；面板印在名字上方，階梯相鄰同字合成世代橫條；可留空）</div>
+                <input class="input" id="tomb-cell-top" type="text" autocomplete="off">
+              </div>
+              <div class="field">
+                <div class="lbl">顯示文字（留空＝自動稱呼；也可填走道、神位、外姓）</div>
+                <input class="input" id="tomb-cell-text" type="text" autocomplete="off">
+              </div>
+              <div class="controls">
+                <button class="btn btn-sm" id="tomb-cell-clear" type="button">清空此格</button>
+                <div class="sp"></div>
+                <button class="btn btn-sm" id="tomb-cell-cancel" type="button">取消</button>
+                <button class="btn btn-primary btn-sm" id="tomb-cell-ok" type="button">確定</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view="print">
+          <div class="sec-title">掃墓祭祖寄送（年度作業）</div>
+
+          <div class="banner banner-info">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></svg>
+            <div>年度動線：祭祖頁建好活動 → 這裡印「掃墓通知單」雙面合併寄出；名冊與信封片頭在旁備用。開啟列印頁後按上方「列印 / 另存 PDF」。此功能需以正式模式（本機伺服器）開啟。</div>
+          </div>
+
+          <div class="print-grid" id="print-data-grid">
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h9l5 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M14 3v5h5"/><path d="M8 13h8"/><path d="M8 17h6"/></svg>
+              </div>
+              <div class="nm">掃墓通知單</div>
+              <div class="ds">年度寄送成品：每位收件人兩頁——正面寄件資訊（郵遞區號＋地址＋姓名編號）、背面掃墓通函。雙面列印後對摺即可寄。內文取自活動的「通函說明」；單張校對選「僅內容」。</div>
+              <div class="print-src">
+                <select id="print-letter-event" class="select" aria-label="掃墓通知單祭祖活動">
+                  <option value="">選擇祭祖活動…</option>
+                </select>
+                <select id="print-letter-mail" class="select" aria-label="掃墓通知單寄送範圍">
+                  <option value="">僅內容（單張校對）</option>
+                  <option value="all" selected>合併寄送・全部房頭</option>
+                </select>
+              </div>
+              <button id="print-letter-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+              </div>
+              <div class="nm">信封片頭</div>
+              <div class="ds">在世且有郵遞區號或住址的族親產生信封收件區塊（女士/先生＋編號），依房頭與世代排序，可選單一房或全部。有勾「寄送對象」（戶長／代表）者只印勾選的人；全都沒勾才逐人印。</div>
+              <div class="print-src">
+                <select id="print-labels-branch" class="select" aria-label="信封片頭房頭">
+                  <option value="">全部房頭</option>
+                </select>
+              </div>
+              <button id="print-labels-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 19a4 4 0 0 0-8 0"/><circle cx="12" cy="9" r="3"/><path d="M5 19a3 3 0 0 1 3-3"/><path d="M19 19a3 3 0 0 0-3-3"/><circle cx="5.5" cy="11" r="2"/><circle cx="18.5" cy="11" r="2"/></svg>
+              </div>
+              <div class="nm">通知名單</div>
+              <div class="ds">一支一份（同傳統分檔）：選一位家長，上段列該支先人（含配偶、農曆生日），下段列在世子孫聯絡名冊（電話、住址），尾附空白列供現場補登。</div>
+              <div class="print-src" id="print-roster-pick"></div>
+              <button id="print-roster-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+          </div>
+
+          <div class="sec-title">族譜與牌位</div>
+
+          <div class="print-grid">
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="4" rx="1"/><rect x="3" y="17" width="6" height="4" rx="1"/><rect x="15" y="17" width="6" height="4" rx="1"/><path d="M12 7v5"/><path d="M6 17v-2h12v2"/><path d="M12 12v3"/></svg>
+              </div>
+              <div class="nm">全家族表</div>
+              <div class="ds">選擇一位家長，列出本人、配偶與子女（各接其配偶）；在世者附住址與電話。</div>
+              <div class="print-src" id="print-family-pick"></div>
+              <button id="print-family-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19.5" r="2"/><path d="M12 6.5v3.5"/><path d="M12 14v3.5"/><path d="M14 12h5"/><path d="M14 4.5h5"/></svg>
+              </div>
+              <div class="nm">直系族譜表</div>
+              <div class="ds">選一位祖先：列出父母與全部子女，再接其中一位兒子的媳婦與內孫（同原本的「第N世某某直系族譜表」）。一位兒子一張，可選全部或只印其中一位。</div>
+              <div class="print-src" id="print-lineage-pick"></div>
+              <div class="print-src">
+                <select id="print-lineage-child" class="select" aria-label="直系族譜表要接哪一位子女">
+                  <option value="">全部兒子（每人一張）</option>
+                </select>
+              </div>
+              <button id="print-lineage-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8a1 1 0 0 1 1 1v15l-5-2.5L7 19V4a1 1 0 0 1 1-1Z"/><path d="M12 7v6"/><path d="M9.5 9.5h5"/></svg>
+              </div>
+              <div class="nm">牌位姓名表</div>
+              <div class="ds">已歿先人依房頭與世代排序的牌位姓名清冊（外姻標媳／女婿），可選單一房或全部。</div>
+              <div class="print-src">
+                <select id="print-tablet-branch" class="select" aria-label="牌位姓名表房頭">
+                  <option value="">全部房頭</option>
+                </select>
+              </div>
+              <button id="print-tablet-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+          </div>
+
+          <div class="sec-title">會務文件</div>
+
+          <div class="print-grid">
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+              </div>
+              <div class="nm">穴排位圖</div>
+              <div class="ds">依「穴排位」頁畫好的格子表橫向列印：列標籤直書、格子自動套「字號　姓公／名　姓氏」。可選單一場地，或全部（每個場地一頁）。</div>
+              <div class="print-src">
+                <select id="print-tomb-site" class="select" aria-label="穴排位場地">
+                  <option value="all">全部場地（每場地一頁）</option>
+                </select>
+              </div>
+              <button id="print-tomb-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M3 10h18"/><path d="M8 15h5"/></svg>
+              </div>
+              <div class="nm">開會通知</div>
+              <div class="ds">會員大會開會通知公文，抬頭取協會資料；事由、時間、地點先選「僅內容」點字擬好、按「儲存開會內容」（需先解鎖編輯），再選「合併寄送」出成品（正面寄件、背面通知）。</div>
+              <div class="print-src">
+                <select id="print-meeting-mail" class="select" aria-label="開會通知寄送範圍">
+                  <option value="">僅內容（擬稿／公告）</option>
+                  <option value="all">合併寄送・全部房頭</option>
+                </select>
+              </div>
+              <button id="print-meeting-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+
+            <div class="doc-card">
+              <div class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 15l2 2 4-4"/></svg>
+              </div>
+              <div class="nm">交接單（印出手寫）</div>
+              <div class="ds">換人接手時填的一頁交接單：PIN、隨身碟與原始文件放哪、技術協力聯絡人。不帶任何族人資料，印出後以筆填寫。</div>
+              <button id="print-handover-btn" class="btn btn-primary btn-sm" type="button">開啟列印頁</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" data-view="settings">
+          <div class="sec-title">編輯與安全</div>
+          <div class="card">
+            <div class="row">
+              <div class="label">
+                <div class="t">編輯鎖</div>
+                <div class="d">設定 PIN 後，需解鎖才能修改族譜與祭祖資料</div>
+              </div>
+              <span id="settings-lockChip" class="chip chip-muted">瀏覽中</span>
+              <button id="settings-lockBtn" class="btn btn-ghost btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                設定／重設 PIN
+              </button>
+            </div>
+          </div>
+
+          <div class="sec-title">外觀</div>
+          <div class="card">
+            <div class="row">
+              <div class="label">
+                <div class="t">主題</div>
+                <div class="d">淺色清爽編輯室風，或於夜間切換深色</div>
+              </div>
+              <div id="settings-themeSeg" class="seg" role="group" aria-label="主題">
+                <button type="button" data-theme="light" class="on">淺色</button>
+                <button type="button" data-theme="dark">深色</button>
+                <button type="button" data-theme="system">跟隨系統</button>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">
+                <div class="t">介面縮放</div>
+                <div class="d">調整整體文字與元件大小（<span id="settings-zoomVal" class="mono">100%</span>）</div>
+              </div>
+              <input id="settings-zoom" class="slider" type="range" min="85" max="130" step="5" value="100" aria-label="介面縮放">
+            </div>
+          </div>
+
+          <div class="sec-title">祭祖習俗</div>
+          <div class="card">
+            <div class="row">
+              <div class="label">
+                <div class="t">掃墓週期</div>
+                <div class="d">記錄本家族的掃墓習俗（依籍貫傳統），供通函措辭與祭祖活動排期參考</div>
+              </div>
+              <select id="settings-sweepCycle" class="select" aria-label="掃墓週期">
+                <option value="qingming">清明（活清明・閩南泉州裔）</option>
+                <option value="sanrijie">三日節（古清明・漳州裔）</option>
+                <option value="hakka">客家掛紙（年後至清明前）</option>
+                <option value="winter">冬至（過冬紙・部分閩南潮汕）</option>
+                <option value="custom">自訂日期</option>
+              </select>
+            </div>
+            <div class="row" style="border-bottom:0">
+              <div class="label">
+                <div class="d" id="settings-sweepHint" style="line-height:1.7"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 【已移除 2026-09-04】「選用功能（開源）」區：四個預留開關（掃墓提醒／忌日提醒／
+               穴排位圖／成員照片）已逐一結案——穴排位圖做成常駐功能（左側「穴排位」頁），
+               其餘三項總幹事決定不做。沒有任何開關留下，整區一併撤除；設定頁不留空框。 -->
+
+          <div class="sec-title">房頭管理</div>
+          <div class="card">
+            <div class="row" style="align-items:flex-start">
+              <div class="label">
+                <div class="t">房頭（房份）</div>
+                <div class="d">自訂本家族的房頭數量與名稱，供族譜篩選與編輯範圍使用。各家族不一定為三房，可自行增減；留空則不分房。點各房前的色塊可自訂樹狀圖配色。新增、刪除、改色都要先解鎖編輯模式。</div>
+              </div>
+              <div class="branch-mgr" id="settings-branches" style="flex:1;min-width:220px;max-width:420px">
+                <div class="branch-list" id="settings-branchList"></div>
+                <div class="controls" style="margin:10px 0 0">
+                  <input id="settings-branchInput" class="input" type="text" placeholder="新增房頭名稱，例：長房" style="flex:1;min-width:140px" maxlength="20">
+                  <!-- 常駐可見：瀏覽模式加鎖形提示，點擊由 requireEdit 引導解鎖（M-9） -->
+                  <button id="settings-branchAdd" class="btn btn-ghost btn-sm locked-hint" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    新增
+                  </button>
+                  <button id="settings-branchColorReset" class="btn btn-ghost btn-sm locked-hint" type="button" title="清除所有自訂顏色，回到預設六色">還原預設配色</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec-title edit-only">協會資料</div>
+          <div class="card edit-only">
+            <div class="row">
+              <div class="label">
+                <div class="t">協會（宗親會）基本資料</div>
+                <div class="d">用於掃墓通函、信封片頭與各式列印抬頭；未填欄位於列印時自動留空。</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">協會全名</div></div>
+              <input id="settings-orgName" class="input" type="text" placeholder="例：○○縣○氏宗親會" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">會址</div></div>
+              <input id="settings-orgAddress" class="input" type="text" placeholder="例：○○縣○○鄉○○路○號" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">聯絡處（含郵遞區號）</div></div>
+              <input id="settings-orgContactAddr" class="input" type="text" placeholder="例：260 ○○縣○○市○○街○號" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">理事長</div></div>
+              <input id="settings-orgChair" class="input" type="text" placeholder="姓名" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">理事長電話</div></div>
+              <input id="settings-orgChairPhone" class="input" type="text" placeholder="例：09xx-xxx-xxx" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">總幹事</div></div>
+              <input id="settings-orgOfficer" class="input" type="text" placeholder="姓名" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">總幹事電話</div></div>
+              <input id="settings-orgOfficerPhone" class="input" type="text" placeholder="例：09xx-xxx-xxx" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">立案（登記）字號</div></div>
+              <input id="settings-orgRegNo" class="input" type="text" placeholder="例：○府社行字第○○○號" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row">
+              <div class="label">
+                <div class="t">信封支系標註起算世代（留空＝不印）</div>
+                <div class="d">信封片頭與合併寄送寄件頁的右上角，可加印「房別＋世代・○世祖 姓名」供退件歸檔（○＝起算世代＋3，例：填 11 → 標到十四世祖）。沒有這個慣例就留空。</div>
+              </div>
+              <input id="settings-orgGenBase" class="input" type="text" inputmode="numeric" placeholder="留空＝不印；例：11" style="width:280px" autocomplete="off">
+            </div>
+            <div class="row" style="border-bottom:0">
+              <div class="label"><div class="d">儲存後即套用於通函與信封片頭列印。</div></div>
+              <button id="settings-orgSave" class="btn btn-primary btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>
+                儲存協會資料
+              </button>
+            </div>
+          </div>
+
+          <div class="sec-title">資料</div>
+          <div class="card">
+            <!-- 資料存放位置（體檢 release-4）：唯讀顯示 /api/state 的 dbPath，由 app.js 回填 -->
+            <div class="row">
+              <div class="label">
+                <div class="t">資料存放位置</div>
+                <div class="d">族譜資料庫檔（自動備份在同一資料夾的 backups）：</div>
+                <div class="d" id="settings-dbPath" style="font-family:var(--font-mono);word-break:break-all;user-select:text">載入中…</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">
+                <div class="t">本機備份</div>
+                <div class="d">將整份族譜與祭祖設定打包成單一檔案</div>
+              </div>
+              <button id="settings-backupBtn" class="btn btn-ghost btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                立即備份
+              </button>
+              <button id="settings-restoreBtn" class="btn btn-ghost btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 9v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4"/><path d="M7 14l5-5 5 5"/><path d="M12 9v12"/></svg>
+                還原備份
+              </button>
+            </div>
+            <div class="row">
+              <div class="label">
+                <div class="t">匯入／匯出</div>
+                <div class="d">以 CSV 建入自家族譜（先預覽再確認寫入），或輸出成員清冊；建議先下載範本依表頭填寫</div>
+              </div>
+              <button id="settings-importTpl" class="btn btn-ghost btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9.5 14.5 12 17l2.5-2.5"/></svg>
+                下載匯入範本
+              </button>
+              <button id="settings-importBtn" class="btn btn-ghost btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M12 17V9"/><path d="M8.5 12.5 12 9l3.5 3.5"/></svg>
+                匯入 CSV
+              </button>
+              <button id="settings-exportBtn" class="btn btn-ghost btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M12 9v8"/><path d="M8.5 13.5 12 17l3.5-3.5"/></svg>
+                匯出 CSV（Excel 可開）
+              </button>
+            </div>
+            <!-- 清空示範資料（首次使用）：僅示範資料庫（demo_data=1）且編輯模式時
+                 由 app.js 解除 hidden；真實資料庫絕不顯示 -->
+            <div class="row edit-only" id="settings-demoRow" hidden>
+              <div class="label">
+                <div class="t">清空示範資料</div>
+                <div class="d">目前資料庫載有虛構示範資料；清空後即可開始建立您自己的家族資料。</div>
+              </div>
+              <button id="settings-demoClear" class="btn btn-ghost btn-sm" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                清空示範資料
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+        <section class="view" data-view="about">
+          <div class="sec-title">關於繫族</div>
+
+          <div class="card">
+            <div class="md-head" style="margin-bottom:10px">
+              <div class="ava" style="border-radius:12px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><rect x="3.5" y="8" width="11" height="8" rx="4"/><rect x="9.5" y="8" width="11" height="8" rx="4"/></svg>
+              </div>
+              <div class="who">
+                <div class="nm">繫族 KinLink <span class="chip chip-accent mono" id="about-version">v—</span></div>
+                <div class="sub">智慧族譜與祭祖通知系統．離線單機．插隨身碟即用</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label">
+                <div class="t">緣起與致謝</div>
+                <div class="d">本系統由宜蘭楊士芳進士文化發展協會（楊士芳進士家族）為自家掃墓祭祖與族譜維護發起，現以 MIT 授權開源，適用於任何家族／宗親會；專案內所有示範資料——包含姓名、地址、電話與生卒年月——皆為虛構，不對應任何一位真實族人。</div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">授權</div><div class="d">MIT License — 自由使用、修改、再發布。</div><div class="d">第三方元件授權見下載包內的 THIRD-PARTY-NOTICES.txt。</div></div>
+            </div>
+            <div class="row">
+              <div class="label"><div class="t">操作手冊</div><div class="d">單張 A4 白話手冊：開機、關機、備份、編輯與列印。</div></div>
+              <button class="btn btn-ghost btn-sm" id="about-manual" type="button">開啟手冊</button>
+            </div>
+          </div>
+
+          <div class="sec-title">軟體更新</div>
+          <div class="card">
+            <div class="row">
+              <div class="label">
+                <div class="t">發佈來源（GitHub）</div>
+                <div class="d">格式 owner/repo；設定後「檢查更新」會連 GitHub 比對最新版（僅按下時連網）。</div>
+              </div>
+              <input class="input mono" id="about-repo" placeholder="尚未設定發佈來源" style="width:240px">
+              <button class="btn btn-ghost btn-sm edit-only" id="about-repo-save" type="button">儲存</button>
+            </div>
+            <div class="row">
+              <div class="label">
+                <div class="t">檢查更新</div>
+                <div class="d" id="about-update-msg">目前版本載入中…</div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="about-check" type="button">檢查更新</button>
+              <button class="btn btn-ghost btn-sm" id="about-download" type="button" hidden>下載更新</button>
+            </div>
+            <div class="banner banner-info" id="about-update-hint" hidden style="margin-top:8px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+              <span id="about-update-hint-txt"></span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="lock-mask" hidden>
+    <div class="modal">
+      <h3>編輯鎖</h3>
+      <!-- 文案由 app.js openLock() 依傳輸模式覆寫：正式模式指向真實 PIN，展示模式註明任意 PIN -->
+      <div class="sub" id="lock-sub">輸入共用 PIN 進入編輯模式（首次預設 PIN 為 0000，可於「設定 → 編輯鎖」變更）。</div>
+      <div class="field">
+        <div class="lbl">共用 PIN</div>
+        <input id="lock-pin" class="input pin-in" type="password" inputmode="numeric" placeholder="••••" autocomplete="off">
+      </div>
+      <div class="field">
+        <div class="lbl">進入房頭（編輯範圍護欄：選定某房後僅能修改該房成員）</div>
+        <!-- 房頭選項由 app.js 依 KinAPI.getSettings().branches 動態產生；
+             預設「全部（委員）」＝不限房，可修改全族資料 -->
+        <select id="lock-branch" class="select" style="width:100%">
+          <option value="">全部（委員）</option>
+        </select>
+      </div>
+      <div class="acts">
+        <button type="button" class="btn btn-ghost" id="lock-cancel">取消</button>
+        <button type="button" class="btn btn-primary" id="lock-unlock">解鎖</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 設定／重設 PIN：由設定頁「設定／重設 PIN」按鈕開啟，走 KinAPI.setPin(old,new) -->
+  <div class="modal-mask" id="pin-mask" hidden>
+    <div class="modal">
+      <h3>設定／重設 PIN</h3>
+      <!-- 文案由 app.js 依傳輸模式覆寫（正式／展示） -->
+      <div class="sub" id="pin-sub">變更編輯鎖共用 PIN；首次預設 PIN 為 0000。</div>
+      <div class="field">
+        <div class="lbl">目前 PIN</div>
+        <input id="pin-old" class="input pin-in" type="password" inputmode="numeric" placeholder="••••" autocomplete="off">
+      </div>
+      <div class="field">
+        <div class="lbl">新 PIN</div>
+        <input id="pin-new" class="input pin-in" type="password" inputmode="numeric" placeholder="••••" autocomplete="off">
+      </div>
+      <div class="field">
+        <div class="lbl">確認新 PIN</div>
+        <input id="pin-new2" class="input pin-in" type="password" inputmode="numeric" placeholder="••••" autocomplete="off">
+      </div>
+      <div class="acts">
+        <button type="button" class="btn btn-ghost" id="pin-cancel">取消</button>
+        <button type="button" class="btn btn-primary" id="pin-save">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- R1 通用 CSV 匯入預覽：選檔後先 preview 試算（不寫庫），摘要由 app.js 填入
+       #import-summary；按「確認匯入」才 commit 實際寫入 -->
+  <div class="modal-mask" id="import-mask" hidden>
+    <div class="modal modal-lg">
+      <h3>匯入 CSV — 預覽</h3>
+      <div class="sub" id="import-sub">以下為試算結果，尚未寫入資料庫；請核對後按「確認匯入」。</div>
+      <div id="import-summary"></div>
+      <div class="acts">
+        <button type="button" class="btn btn-ghost" id="import-cancel">取消</button>
+        <button type="button" class="btn btn-primary" id="import-commit">確認匯入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成員編輯表單：由族譜頁「編輯」／「新增成員」開啟，走 KinAPI.saveMember / deleteMember -->
+  <div class="modal-mask" id="mform-mask" hidden>
+    <div class="modal modal-lg">
+      <h3 id="mform-title">編輯成員</h3>
+      <div class="sub" id="mform-sub">填寫後按「儲存」寫回族譜；標＊者為必填，其餘欄位可留空。</div>
+
+      <div class="mform-sec">基本資料</div>
+      <div class="field">
+        <div class="lbl">姓名＊</div>
+        <input id="mform-name" class="input" type="text" maxlength="30" autocomplete="off">
+      </div>
+
+      <div class="mform-2col">
+        <div class="field">
+          <div class="lbl">字號</div>
+          <input id="mform-style" class="input" type="text" maxlength="20" autocomplete="off">
+        </div>
+        <div class="field">
+          <div class="lbl">性別</div>
+          <div class="seg" id="mform-gender" role="group" aria-label="性別">
+            <button type="button" data-g="M" class="on">男</button>
+            <button type="button" data-g="F">女</button>
+            <button type="button" data-g="">不詳</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mform-2col">
+        <div class="field">
+          <div class="lbl">世代（第幾世）＊</div>
+          <input id="mform-gen" class="input" type="number" min="1" step="1" placeholder="例：3">
+        </div>
+        <div class="field">
+          <div class="lbl">房頭</div>
+          <!-- 選項由 app.js 依 KinAPI.getSettings().branches 動態產生；空值＝不分房 -->
+          <select id="mform-branch" class="select" style="width:100%">
+            <option value="">不分房</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 親屬關係（規格 §4.1 雙軌制）：親生與過繼／收養可並存（每型別至多一父一母）。
+           編輯既有成員時增刪即時生效；新增成員時先暫存，按「儲存」後一併寫入。 -->
+      <div class="mform-sec">親屬關係</div>
+      <div class="field">
+        <div class="lbl">父母（親生與過繼／收養可並存；留空＝無父母，如始遷祖）</div>
+        <div id="mform-parents" class="rel-list"></div>
+        <div class="rel-add">
+          <div id="mform-parent-pick" class="rel-pick"></div>
+          <select id="mform-parent-type" class="select" aria-label="親子關係型別">
+            <option value="BIOLOGICAL">親生</option>
+            <option value="ADOPTED">過繼</option>
+            <option value="FOSTER">收養</option>
+          </select>
+          <button type="button" class="btn btn-ghost" id="mform-parent-add-btn">＋加父/母</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="lbl">配偶</div>
+        <div id="mform-spouses" class="rel-list"></div>
+        <div class="rel-add">
+          <div id="mform-spouse-pick" class="rel-pick"></div>
+          <select id="mform-spouse-status" class="select" aria-label="婚姻狀態">
+            <option value="MARRIED">婚姻中</option>
+            <option value="WIDOWED">喪偶</option>
+            <option value="DIVORCED">離異</option>
+            <option value="SEPARATED">分居</option>
+          </select>
+          <button type="button" class="btn btn-ghost" id="mform-spouse-add-btn">＋加配偶</button>
+        </div>
+      </div>
+
+      <div class="mform-sec">生卒日期</div>
+      <div class="mform-2col">
+        <div class="field">
+          <div class="lbl">生年（國曆）</div>
+          <input id="mform-birth" class="input" type="text" placeholder="例：1928-03-12 或 1928" autocomplete="off">
+          <div class="hint-lunar" id="mform-birth-lunar"></div>
+        </div>
+        <div class="field">
+          <div class="lbl">生日原文（族譜記載）</div>
+          <input id="mform-birthOrig" class="input" type="text" placeholder="例：民國十七年戊辰二月廿一" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="mform-2col">
+        <div class="field">
+          <div class="lbl">卒年（西元年；留空且未勾選下方方框、卒日原文也空白＝在世）</div>
+          <input id="mform-death" class="input" type="text" placeholder="例：1835" autocomplete="off">
+          <!-- 過世但年份不詳（老祖先常見）：勾選後存成「已歿」，不會被當成在世（M-8）；
+               卒年空白但卒日原文有寫（只記得忌日）也存成「已歿」 -->
+          <label style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer">
+            <input id="mform-death-unknown" type="checkbox" style="width:16px;height:16px;accent-color:var(--accent)">
+            <span class="lbl" style="margin:0">已過世（卒年不詳）</span>
+          </label>
+          <div class="hint-lunar" id="mform-death-hint"></div>
+        </div>
+        <div class="field">
+          <div class="lbl">卒日原文（族譜記載；本譜慣例月日為農曆）</div>
+          <input id="mform-deathOrig" class="input" type="text" placeholder="例：1835/05月19日歿（05月19日＝農曆）" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="mform-sec">聯絡與寄送</div>
+      <div class="field">
+        <div class="lbl">電話</div>
+        <input id="mform-phone" class="input" type="text" autocomplete="off">
+      </div>
+
+      <div class="mform-2col">
+        <div class="field">
+          <div class="lbl">郵遞區號（信封片頭／通函寄送用）</div>
+          <input id="mform-postal" class="input" type="text" autocomplete="off" placeholder="例：260" maxlength="6">
+        </div>
+        <div class="field">
+          <div class="lbl">現居</div>
+          <input id="mform-city" class="input" type="text" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input id="mform-mailtarget" type="checkbox" style="width:16px;height:16px;accent-color:var(--accent)">
+          <span class="lbl" style="margin:0">掃墓通知寄送對象（戶長／代表；信封片頭與合併寄送只寄有勾選者）</span>
+        </label>
+      </div>
+
+      <div class="mform-sec">安葬資訊（在世者整段留空）</div>
+      <div class="field">
+        <div class="lbl">位置描述（墓園／塔位等）</div>
+        <input id="mform-burial" class="input" type="text" autocomplete="off" placeholder="例：員山福園 慈恩區 12 號">
+      </div>
+
+      <div class="mform-2col">
+        <div class="field">
+          <div class="lbl">安葬型態</div>
+          <select id="mform-burialType" class="select" style="width:100%">
+            <option value="">未指定</option>
+            <option value="BURIAL">土葬（墓穴）</option>
+            <option value="COLUMBARIUM">塔位（納骨）</option>
+            <option value="TREE">樹葬／花葬</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="lbl">穴位／塔位編號（供穴排位表使用）</div>
+          <input id="mform-burialCode" class="input" type="text" autocomplete="off" placeholder="例：甲區 3 排 12 號">
+        </div>
+      </div>
+
+      <div class="mform-sec">其他</div>
+      <!-- R4：家族習慣稱呼（稱謂計算 forward 覆寫；留空＝依世系自動推算） -->
+      <div class="field">
+        <div class="lbl">習慣稱呼（家族內對此人的慣用稱謂，稱謂計算時優先顯示）</div>
+        <input id="mform-customkin" class="input" type="text" autocomplete="off" placeholder="例：三叔公（留空＝依世系自動推算）">
+      </div>
+
+      <div class="field">
+        <div class="lbl">備註（照片說明、祖籍／渡台記事、職業事蹟、晉塔日等都寫這裡）</div>
+        <input id="mform-note" class="input" type="text" autocomplete="off" placeholder="不另設欄位，自由書寫">
+      </div>
+
+      <div class="acts">
+        <button type="button" class="btn btn-ghost" id="mform-cancel">取消</button>
+        <button type="button" class="btn btn-primary" id="mform-save">儲存</button>
+      </div>
+      <!-- 僅編輯既有成員時顯示；點擊需雙重確認 -->
+      <div class="acts" id="mform-danger-row" hidden>
+        <button type="button" class="btn btn-danger" id="mform-delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          刪除此成員
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-host" id="toast-host" aria-live="polite"></div>
+
+  <script src="js/bridge.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

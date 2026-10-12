@@ -1,0 +1,32 @@
+# -*- coding: utf-8 -*-
+# 繫族 (KinLink) ｜ 打包環境的完整版本鎖（pip constraints）
+#
+# requirements.txt 只鎖「直接相依」（pywebview、borax），它們底下的傳遞相依（pythonnet、clr_loader、
+# bottle、proxy_tools、cffi…）與 PyInstaller 自己的相依原本都沒鎖：換一台電腦重建，exe 裡的內容就不同，
+# 某天上游改版就可能打出壞 exe（體檢 release-7）。build_exe.bat 安裝時一律加 -c constraints.txt。
+#
+# 版本取自 2026-10 驗證過的 build_venv（Python 3.12.10，pip freeze）。
+# 適用 Python 3.10–3.13：pyinstaller 6.10.0 要 <3.14；pythonnet 3.1.0、clr_loader 0.3.1、pycparser 3.0 要 >=3.10。
+# 升級任何一個套件：改這裡（與 requirements.txt 的直接相依）→ 刪掉 build_venv 重跑 build_exe.bat
+# → tests\test_g9_build_onboarding.py 會比對 build_venv 實裝版本與本檔是否一致。
+# pip 本身不鎖（build_exe.bat 會先升級 pip，它不會打進 exe）。
+
+# === 執行期（會打包進 繫族.exe）===
+pywebview==5.4
+borax==4.1.3
+pythonnet==3.1.0
+clr_loader==0.3.1
+cffi==2.0.0
+pycparser==3.0
+bottle==0.13.4
+proxy_tools==0.1.0
+typing_extensions==4.16.0
+
+# === 打包工具（只在建置時用）===
+pyinstaller==6.10.0
+pyinstaller-hooks-contrib==2026.6
+altgraph==0.17.5
+pefile==2024.8.26
+packaging==26.2
+pywin32-ctypes==0.2.3
+setuptools==82.0.1

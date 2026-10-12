@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>繫族 KinLink 操作手冊</title>
+<link rel="stylesheet" href="assets/print.css">
+</head>
+<body>
+
+<div class="toolbar no-print"><button onclick="window.print()">列印 / 另存 PDF</button></div>
+
+<div class="sheet">
+
+  <div class="doc-title">繫族 KinLink 操作手冊</div>
+  <div class="doc-subtitle">一頁看懂五件事．請印一份和隨身碟放在一起，交接時一併交給下一位</div>
+
+  <!-- 五件事：每列＝步驟編號＋白話說明 -->
+  <table class="grid">
+    <tr>
+      <th style="width:8.5em">事項</th>
+      <th>怎麼做（照著做就好）</th>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg><br>
+        <b>1．開機</b>
+      </td>
+      <td>
+        ① 把隨身碟插進電腦的 USB 孔。<br>
+        ② 打開隨身碟，<b>雙擊「繫族.exe」</b>。<br>
+        ③ 等幾秒鐘，視窗會自動打開，接著就能開始使用。
+      </td>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18"/><path d="M10 12.5l4 4"/><path d="M14 12.5l-4 4"/></svg><br>
+        <b>2．安全關機</b>
+      </td>
+      <td>
+        ① 用完了，直接按視窗右上角的「×」關掉就好，不必其他步驟。<br>
+        ② 要拔隨身碟之前，<b>先確認視窗已經關掉</b>，再拔。<br>
+        <span style="font-size:9.5pt;color:#555">若繫族是開在瀏覽器裡（這台電腦缺少 WebView2 元件時），會另外跳出一個小視窗：
+        先關掉瀏覽器，再按小視窗的「確定」結束繫族；按「確定」之前不要拔隨身碟。</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v9"/><path d="M8 8l4 4 4-4"/><rect x="4" y="15" width="16" height="6" rx="1"/></svg><br>
+        <b>3．備份／還原</b>
+      </td>
+      <td>
+        ① 點「設定」→ 按「<b>立即備份</b>」，備份會存進 繫族.exe 旁邊的 backups 資料夾，檔名開頭是「繫族-備份-」。
+        程式每次開啟、每次解鎖也會自動備份到同一個資料夾。<br>
+        ② 想換新隨身碟：把整支隨身碟的內容<b>全部複製</b>到新碟，就是完整搬家。<br>
+        ③ 資料出問題時：先照第 4 件事解鎖，到「設定」按「<b>還原備份</b>」→ 到 backups 資料夾挑一份備份檔 → 確定即可救回
+        （還原前系統會先自動備份現況）。
+      </td>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><br>
+        <b>4．編輯資料</b>
+      </td>
+      <td>
+        ① 平常畫面是「瀏覽模式」，只能看、不能改，不怕誤按。<br>
+        ② 點左下角「<b>瀏覽模式</b>」，輸入 PIN，就能進入編輯。<br>
+        ③ <b>用完請手動上鎖</b>：按左下角「<b>編輯中</b>」（或畫面上方的「<b>完成，鎖定</b>」）回到瀏覽模式。
+        系統不會自動上鎖，離開電腦前一定要按。<br>
+        ④ PIN <b>務必抄在交接單上</b>妥善保管；知道現行 PIN 時可在「設定 → 編輯鎖 →<b>設定／重設 PIN</b>」改一組新的。<br>
+        　 若 PIN 遺失：程式內無法自行重設，請找會用電腦的親友以 SQLite 工具開啟 繫族.db，
+        把 settings 表的 edit_pin 改回 0000（或聯繫協會技術協力）。
+      </td>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="1"/><rect x="7" y="14" width="10" height="7"/></svg><br>
+        <b>5．列印文件</b>
+      </td>
+      <td>
+        ① 點左邊選單的「<b>列印</b>」頁，找到要印的卡片：掃墓通知單、信封片頭、通知名單、全家族表、
+        直系族譜表、牌位姓名表、穴排位圖、開會通知、交接單（印出手寫）。<br>
+        ② 先在卡片上選好要印誰：掃墓通知單選「祭祖活動」；通知名單、全家族表在搜尋框打名字選一位家長；
+        直系族譜表選一位祖先（可再選只印哪一位兒子那一支）；
+        信封片頭、牌位姓名表選房頭（或全部）；穴排位圖選場地。再按卡片下方的「<b>開啟列印頁</b>」。<br>
+        ③ 列印頁打開後，按頁面<b>最上方</b>的「<b>列印 / 另存 PDF</b>」，即可用印表機印出，或存成 PDF 檔。<br>
+        <span style="font-size:9.5pt;color:#555">交接單不帶族人資料，印出後用筆填寫。
+        開會通知：先選「僅內容」把事由、時間、地點改好，按「儲存開會內容」，再選「合併寄送」開啟（要先解鎖編輯才存得進去）。</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 進階三件事（2026-07 補：通知作業台／成員與關係編輯／檢查更新） -->
+  <div class="doc-title" style="margin-top:16pt">進階三件事</div>
+  <div class="doc-subtitle">會用上面五件事之後，再看這三項就夠了</div>
+
+  <table class="grid">
+    <tr>
+      <th style="width:8.5em">事項</th>
+      <th>怎麼做（照著做就好）</th>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4Z"/></svg><br>
+        <b>6．通知作業台</b>
+      </td>
+      <td>
+        ① 點左邊選單的「<b>祭祖</b>」頁，先在編輯模式建立（或選好）一場祭祖活動。<br>
+        ② 在下方「<b>訊息通知作業台</b>」選活動與通知範圍（全族在世／某房／自訂名單；選「某房」時要在旁邊的房頭下拉選一房），按「<b>產生通知清單</b>」。<br>
+        ③ 系統替每位族親做好一則帶姓名與國曆／農曆日期的訊息，按「複製」即可貼到 LINE 或簡訊轉傳；也可「複製全部」。要寄紙本，按活動卡上的「列印通知單」。
+      </td>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 7-7"/><path d="M16 11h6"/><path d="M19 8v6"/></svg><br>
+        <b>7．成員與關係編輯</b>
+      </td>
+      <td>
+        ① 先照第 4 件事解鎖；掃墓現場請選自己的「<b>房頭</b>」，就只能改本房、不怕誤動他房（委員選「全部」）。<br>
+        ② 到「<b>族譜</b>」頁點任一位族人，按「<b>編輯</b>」改資料；按「<b>新增成員</b>」建新人。表單內可直接增刪「父母」「配偶」關係。
+        <b>離異者的子女請在「父母」登錄生母</b>，否則子女對生母的稱謂會變成「族親」。<br>
+        　 卒年留空、沒勾「已過世（卒年不詳）」、卒日原文也空白＝在世。只記得忌日、不知年份的先人，填卒日原文或勾那個方框即可。<br>
+        ③ 要一次建很多人：到「設定」按「<b>下載匯入範本</b>」，用 Excel 照格式填好存成 CSV，再按「<b>匯入 CSV</b>」→ 看預覽沒問題再確認匯入。
+        預覽若列出「原本在世、匯入後會改成已過世」的人，而他其實仍在世，請把那一列的卒年、卒(原文)清空再匯入。
+      </td>
+    </tr>
+
+    <tr>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg><br>
+        <b>8．檢查更新</b>
+      </td>
+      <td>
+        ① 系統平常<b>完全離線</b>；只有這個功能、且只在你按下按鈕時才連網。<br>
+        ② 點左邊選單最下面的「<b>關於</b>」（在「設定」下面）→ 按「<b>檢查更新</b>」，系統會比對官方發佈的最新版本。
+        上方「發佈來源」已預設為官方 GitHub，一般不用改。<br>
+        ③ 有新版時先照第 4 件事解鎖，按「<b>下載更新</b>」，關閉繫族後雙擊隨身碟裡的「<b>套用更新.bat</b>」即完成換版；族譜資料完全不會被動到。<br>
+        <span style="font-size:9.5pt;color:#555">繫族還開著時，它會請你先關閉並等一下（約 30 秒）。舊版會保留成「繫族-舊版.exe」：
+        新版有問題時，把新的 繫族.exe 改名或刪掉，再把「繫族-舊版.exe」改回「繫族.exe」即可。
+        出現「改名失敗、所有檔案都沒有變動」多半是防毒軟體正在檢查，稍後再雙擊一次。
+        資料夾名稱有前後都是 % 的字樣（如 %OS%）時，程式會請你先把資料夾改名。</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 第一次使用（D4）：把示範資料換成自家族譜的一次性流程。
+       按鈕名稱照 App 現行 UI 逐字寫，順序有資料安全相依（先清空才匯入）。 -->
+  <div class="doc-title" style="margin-top:16pt">第一次使用（只做一次）</div>
+  <div class="doc-subtitle">剛拿到系統時畫面上是虛構的示範資料；照這四步把它換成自家族譜</div>
+
+  <table class="grid">
+    <tr>
+      <th style="width:8.5em">步驟</th>
+      <th>怎麼做（照著做就好）</th>
+    </tr>
+    <tr>
+      <td class="c"><b>開機前</b></td>
+      <td>
+        下載的 zip 先<b>解壓縮</b>到隨身碟或任一資料夾（之後程式、資料、備份都在這個資料夾）。
+        不要放進 C:\Program Files；唯讀的隨身碟或防寫的 SD 卡會跳出說明，請把整個資料夾複製到隨身碟、桌面或「文件」再開。
+        第一次雙擊 <b>繫族.exe</b> 若跳出藍色「Windows 已保護您的電腦」：按小字「<b>其他資訊</b>」→「<b>仍要執行</b>」
+        （程式未購買數位簽章，不是中毒；只問一次）。防毒軟體攔下就把 繫族.exe 加入允許清單。
+      </td>
+    </tr>
+    <tr>
+      <td class="c"><b>0．解鎖</b></td>
+      <td>
+        點左下角「<b>瀏覽模式</b>」→ 輸入 PIN（出廠是 <b>0000</b>）→
+        房頭務必選「<b>全部（委員）</b>」（選單一房的話，第 3 步匯入會被擋下）。
+      </td>
+    </tr>
+    <tr>
+      <td class="c"><b>1．清空示範</b></td>
+      <td>
+        點「設定」→ 按「<b>清空示範資料</b>」→ 確定。畫面會自動重新載入，示範的人物、活動、場地都會清掉。<br>
+        <span style="font-size:9.5pt;color:#555">這顆按鈕只有示範資料庫才會出現，清完就永遠消失。示範的房頭（長房、次房）沒人用的也會一併拿掉，自己加的房頭不動。</span><br>
+        <b>建議先做這一步再匯入</b>，畫面比較乾淨。萬一已經先匯入了也沒關係：清空只刪示範資料，
+        你自己匯入或新增的資料會保留，清空前也會自動備份一份。
+      </td>
+    </tr>
+    <tr>
+      <td class="c"><b>2．填協會資料<br>＋改 PIN</b></td>
+      <td>
+        ① 同「設定」頁，填「<b>協會資料</b>」各欄（協會名、會址、理事長、總幹事…）→ 按「<b>儲存協會資料</b>」。
+        這些會自動印在通函與信封的抬頭上。<br>
+        ② 再到同頁最上面的「<b>編輯鎖</b>」按「<b>設定／重設 PIN</b>」改一組自家的 PIN，並抄在交接單上（交接單在「列印」頁可印）。
+      </td>
+    </tr>
+    <tr>
+      <td class="c"><b>3．建入族人</b></td>
+      <td>
+        人少：點「族譜」→「<b>新增成員</b>」逐位建入。<br>
+        人多：點「設定」→「<b>下載匯入範本</b>」→ 用 Excel 照表頭填好、另存成「CSV UTF-8」→
+        按「<b>匯入 CSV</b>」→ 核對預覽數字 → 按「<b>確認匯入</b>」。
+      </td>
+    </tr>
+    <tr>
+      <td class="c"><b>4．建祭祖活動</b></td>
+      <td>
+        點「祭祖」→「<b>新增祭祖活動</b>」→ 填活動名稱、日期（可選農曆）、集合地點 →「<b>儲存活動</b>」。
+        之後通函、信封、通知訊息都從這場活動帶出資料。<br>
+        <span style="font-size:9.5pt;color:#555">選農曆時，下方會顯示對應的國曆日期，冬月、臘月落在隔年國曆時會提醒；
+        小月沒有三十，選了會被擋下。以前就存了不存在日期的活動，活動卡會出現黃色提醒，請按「編輯」改日。</span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- 交接三件事 -->
+  <div class="doc-title" style="margin-top:16pt">交接三件事</div>
+  <div class="doc-subtitle">換人接手時，把這三樣一起交出去，就完成交接</div>
+
+  <table class="grid">
+    <tr>
+      <td class="c" style="width:33%">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="9" width="8" height="12" rx="1"/><rect x="10" y="3" width="4" height="6"/><path d="M11.2 5.5h.01"/><path d="M12.8 5.5h.01"/></svg><br>
+        <b>一、交隨身碟</b><br>
+        整支隨身碟就是全部資料，<br>直接交給接手的人。
+      </td>
+      <td class="c" style="width:33%">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 21 2"/><path d="M15.5 7.5l3 3"/><path d="M18.5 4.5l2.5 2.5"/></svg><br>
+        <b>二、交 PIN</b><br>
+        編輯用的 PIN 寫在交接單，<br>連同交接單一併交付。<br><span style="font-size:9pt;color:#555">（交接單可在 App「列印」頁印出）</span>
+      </td>
+      <td class="c">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg><br>
+        <b>三、交本手冊</b><br>
+        這張手冊印一份，<br>和隨身碟放在一起保存。
+      </td>
+    </tr>
+  </table>
+
+  <div class="foot">繫族 KinLink　·　本範本所有人物、地址、電話皆為虛構示範</div>
+
+</div>
+
+</body>
+</html>

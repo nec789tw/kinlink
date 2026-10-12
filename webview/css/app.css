@@ -1,0 +1,504 @@
+/* ============================================================
+   繫族 KinLink — WebView 前端設計系統
+   設計語言沿用「淺色清爽編輯室風」：深湖綠 teal 強調色、髮絲線、
+   克制陰影、Noto Sans TC + Space Grotesk。完整淺/深色。
+   （token 與通用元件取自姊妹專案聲音辨識小工具，刻意統一風格；
+   此檔移除 ASR 專屬元件，新增族譜／稱謂／祭祖／編輯鎖元件。）
+   ============================================================ */
+
+:root {
+  --paper:#F8F7F4; --panel:#FFFFFF; --panel-2:#FCFBF9;
+  --ink:#17171A; --ink-2:#3A3A40; --muted:#707078; --faint:#A0A099;
+  --line:#E7E5E0; --line-strong:#D8D5CE;
+  --accent:#0E8E7A; --accent-strong:#0B7565; --accent-soft:#E3F4F0; --accent-tint:#F0F8F6;
+  --live:#E5484D; --live-soft:#FCEBEC;
+  --ok:#1C8C5A; --ok-soft:#E6F3EC;
+  --warn-bg:#FBF4E6; --warn-fg:#8A6312; --warn-line:#ECDCB6;
+  /* 已歿（先人）語意色：沉靜墨藍，與在世綠區隔但不哀傷 */
+  --past:#5B6B8A; --past-soft:#EEF1F6;
+  --fem:#9B466F; --fem-soft:#F3E8EE;
+  --r-card:12px; --r-btn:8px; --r-pill:999px;
+  --shadow-sm:0 1px 2px rgba(20,20,30,.05);
+  --shadow:0 1px 2px rgba(20,20,30,.04), 0 6px 18px rgba(20,20,30,.06);
+  --font-ui:"Noto Sans TC","Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-disp:"Space Grotesk","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --font-mono:"Space Mono","JetBrains Mono","Consolas","Microsoft JhengHei",monospace;
+  --side-w:88px;
+}
+:root[data-theme="dark"] {
+  --paper:#15161A; --panel:#1E2026; --panel-2:#191A1F;
+  --ink:#ECEDEF; --ink-2:#C6C7CC; --muted:#9597A0; --faint:#6A6C75;
+  --line:#2C2E36; --line-strong:#3A3D47;
+  --accent:#18A892; --accent-strong:#13917D; --accent-soft:#14322D; --accent-tint:#122220;
+  --live:#FF5C61; --live-soft:#3A1F21; --ok:#2BB070; --ok-soft:#15321F;
+  --warn-bg:#2E2716; --warn-fg:#E6B968; --warn-line:#4A3E20;
+  --past:#9AA8C4; --past-soft:#222733;
+  --fem:#E2A4C3; --fem-soft:#3A2431;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.35);
+  --shadow:0 1px 2px rgba(0,0,0,.30), 0 6px 18px rgba(0,0,0,.40);
+}
+
+/* 重置 */
+* { box-sizing:border-box; }
+html,body { margin:0; height:100%; }
+[hidden] { display:none !important; }
+body {
+  font-family:var(--font-ui); color:var(--ink); background:var(--paper);
+  font-size:15.5px; line-height:1.55; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+button { font-family:inherit; }
+::selection { background:var(--accent-soft); }
+* { scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; }
+*::-webkit-scrollbar { width:9px; height:9px; }
+*::-webkit-scrollbar-thumb { background:var(--line-strong); border-radius:8px; }
+:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+
+/* ── 骨架 ── */
+.app { display:flex; height:calc(100vh / var(--uiz, 1)); overflow:hidden; }   /* --uiz：介面縮放倍率（app.js applyZoom），body zoom 會把 vh 一起放大 */
+.sidebar { width:var(--side-w); flex:0 0 var(--side-w); background:var(--panel);
+  border-right:1px solid var(--line); display:flex; flex-direction:column; padding:16px 8px 12px; }
+.brand { display:flex; flex-direction:column; align-items:center; gap:7px;
+  padding:4px 0 16px; margin-bottom:8px; border-bottom:1px solid var(--line); }
+.brand .logo { width:40px; height:40px; border-radius:11px; display:grid; place-items:center;
+  background:linear-gradient(150deg,var(--accent),var(--accent-strong)); color:#fff;
+  box-shadow:0 6px 16px rgba(14,142,122,.32); }
+.brand .logo svg { width:22px; height:22px; }
+.brand .name { font-family:var(--font-disp); font-size:12.5px; font-weight:600; color:var(--ink-2); white-space:nowrap; }
+.nav { display:flex; flex-direction:column; gap:3px; margin-top:8px; }
+.nav-item { appearance:none; border:0; background:transparent; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:5px; padding:11px 4px; border-radius:10px;
+  color:var(--muted); transition:background .15s,color .15s; }
+.nav-item svg { width:21px; height:21px; }
+.nav-item .lbl { font-size:13px; font-weight:500; }
+.nav-item:hover { background:var(--panel-2); color:var(--ink-2); }
+.nav-item.active { background:var(--accent-soft); color:var(--accent-strong); }
+.nav-item.active .lbl { font-weight:700; }
+.side-foot { margin-top:auto; padding:10px 6px 2px; }
+/* 側欄只有 88px：圓點與文字並排時文字區剩 45px，「瀏覽模式」會折成兩行（2026-08-22 總幹事回報）。
+   改成圓點在上、文字在下、不折行；太長（編輯中·某房）就省略號。 */
+.lock-state { display:flex; flex-direction:column; align-items:center; gap:6px; justify-content:center; font-size:12px; color:var(--muted); cursor:pointer; }
+.lock-state .lock-state-txt { max-width:100%; white-space:pre-line; text-align:center; line-height:1.3; }
+.lock-state .dot { width:8px; height:8px; border-radius:50%; background:var(--faint); box-shadow:0 0 0 3px var(--line); }
+.lock-state.editing .dot { background:var(--ok); box-shadow:0 0 0 3px var(--ok-soft); }
+
+.main { flex:1; display:flex; flex-direction:column; min-width:0; }
+.topbar { height:58px; flex:0 0 58px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px; border-bottom:1px solid var(--line); background:var(--panel); }
+.topbar h1 { font-family:var(--font-disp); font-size:18px; font-weight:600; margin:0; }
+.topbar .ctx { font-size:13.5px; color:var(--muted); display:flex; align-items:center; gap:10px; }
+/* 編輯模式常駐狀態列（僅解鎖時顯示；.edit-only 由 data-edit 控制） */
+.editbar { display:flex; align-items:center; gap:10px; padding:9px 28px;
+  background:var(--ok-soft); border-bottom:1px solid var(--line);
+  color:var(--ink-2); font-size:13.5px; }
+.editbar svg { width:17px; height:17px; color:var(--ok); flex:0 0 auto; }
+.editbar b { color:var(--ok); }
+.editbar .sp { flex:1; }
+.view-host { flex:1; overflow-y:auto; }
+.view { display:none; padding:26px 28px 40px; max-width:1080px; }
+.view.active { display:block; }
+.sec-title { font-family:var(--font-disp); font-size:13px; font-weight:600; letter-spacing:.6px;
+  text-transform:uppercase; color:var(--faint); margin:26px 0 12px; }
+.sec-title:first-child { margin-top:0; }
+
+/* ── 通用元件 ── */
+.card { background:var(--panel); border:1px solid var(--line); border-radius:var(--r-card); padding:18px; box-shadow:var(--shadow-sm); }
+.card + .card { margin-top:14px; }
+/* 點擊目標：60+ 使用者（含觸控筆電）最小命中高度 40px，小型鈕不低於 34px */
+.btn { appearance:none; cursor:pointer; border:1px solid transparent; border-radius:var(--r-btn);
+  padding:9px 16px; min-height:40px; font-size:14.5px; font-weight:600; display:inline-flex; align-items:center; gap:7px;
+  transition:background .15s,border-color .15s,color .15s,transform .05s; }
+.btn:active { transform:translateY(1px); }
+.btn svg { width:16px; height:16px; }
+.btn-primary { background:var(--accent); color:#fff; box-shadow:0 4px 12px rgba(14,142,122,.26); }
+.btn-primary:hover { background:var(--accent-strong); }
+.btn-ghost { background:var(--panel); color:var(--ink-2); border-color:var(--line-strong); }
+.btn-ghost:hover { background:var(--panel-2); border-color:var(--muted); }
+.btn:disabled { opacity:.45; cursor:default; box-shadow:none; transform:none; }
+.btn-sm { padding:6px 12px; min-height:34px; font-size:13.5px; }
+.switch { display:inline-flex; align-items:center; gap:9px; cursor:pointer; font-size:14px; color:var(--ink-2); user-select:none; }
+.switch input { position:absolute; opacity:0; width:0; height:0; }
+.switch .track { width:38px; height:22px; border-radius:var(--r-pill); background:var(--line-strong); position:relative; transition:background .18s; flex:0 0 auto; }
+.switch .track::after { content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:var(--shadow-sm); transition:transform .18s; }
+.switch input:checked + .track { background:var(--accent); }
+.switch input:checked + .track::after { transform:translateX(16px); }
+.seg { display:inline-flex; padding:3px; gap:2px; background:var(--panel-2); border:1px solid var(--line); border-radius:9px; }
+.seg button { appearance:none; border:0; background:transparent; cursor:pointer; padding:6px 14px; border-radius:6px; font-size:13.5px; font-weight:600; color:var(--muted); transition:.15s; }
+.seg button:hover { color:var(--ink-2); }
+.seg button.on { background:var(--panel); color:var(--accent-strong); box-shadow:var(--shadow-sm); }
+.select { appearance:none; background:var(--panel-2); color:var(--ink); border:1px solid var(--line-strong); border-radius:var(--r-btn);
+  padding:8px 30px 8px 11px; font-size:14px; cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23707078' stroke-width='2.4'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 10px center; }
+.input { background:var(--panel-2); color:var(--ink); border:1px solid var(--line-strong); border-radius:var(--r-btn); padding:9px 11px; font-size:14px; width:100%; }
+.input::placeholder { color:var(--faint); }
+.input.mono { font-family:var(--font-mono); }
+.chip { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:var(--r-pill); font-size:13px; font-weight:600; line-height:1.4; }
+.chip-accent { background:var(--accent-soft); color:var(--accent-strong); }
+.chip-ok { background:var(--ok-soft); color:var(--ok); }
+.chip-muted { background:var(--panel-2); color:var(--muted); border:1px solid var(--line); }
+.chip-past { background:var(--past-soft); color:var(--past); }
+/* 房頭管理：可刪除的房頭標籤（沿用 .chip 外觀，附右側刪除鈕） */
+.branch-list { display:flex; flex-wrap:wrap; }
+.branch-tag { font-size:13.5px; }
+.branch-tag .branch-del { display:inline-flex; align-items:center; justify-content:center;
+  margin-left:5px; width:24px; height:24px; padding:0; border:0; border-radius:var(--r-pill);
+  background:transparent; color:var(--muted); font-size:18px; line-height:1; cursor:pointer; }
+.branch-tag .branch-del:hover { background:var(--line-strong); color:var(--ink); }
+.row { display:flex; align-items:center; gap:14px; padding:13px 2px; border-bottom:1px solid var(--line); }
+.row:last-child { border-bottom:0; }
+.row .label { flex:1; }
+.row .label .t { font-size:14.5px; font-weight:500; color:var(--ink); }
+.row .label .d { font-size:13px; color:var(--muted); margin-top:1px; }
+.controls { display:flex; align-items:center; flex-wrap:wrap; gap:14px; margin:14px 0; }
+.controls .sp { flex:1; }
+.banner { display:flex; gap:11px; align-items:flex-start; padding:13px 16px; border-radius:10px; font-size:13.5px; line-height:1.6; }
+.banner svg { width:17px; height:17px; flex:0 0 auto; margin-top:2px; }
+.banner-warn { background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn-fg); }
+.banner-info { background:var(--accent-tint); border:1px solid var(--accent-soft); color:var(--accent-strong); }
+.slider { -webkit-appearance:none; appearance:none; width:180px; height:5px; border-radius:4px; background:var(--line-strong); cursor:pointer; }
+.slider::-webkit-slider-thumb { -webkit-appearance:none; width:17px; height:17px; border-radius:50%; background:var(--accent); box-shadow:var(--shadow-sm); cursor:pointer; }
+
+/* ── 曆法徽章（國曆／農曆）／代數 chip ── */
+.cal-badge { display:inline-block; padding:1px 7px; border-radius:var(--r-pill); font-size:12.5px; font-weight:600; font-family:var(--font-mono); }
+.cal-solar { background:var(--accent-soft); color:var(--accent-strong); }
+.cal-lunar { background:var(--warn-bg); color:var(--warn-fg); }
+.gen-chip { display:inline-flex; align-items:center; min-width:30px; justify-content:center; padding:2px 7px;
+  border-radius:6px; font-size:12.5px; font-weight:700; font-family:var(--font-mono); background:var(--panel-2); color:var(--muted); border:1px solid var(--line); }
+
+/* ============================================================
+   族譜：直式可展開列表（手機優化）
+   ============================================================ */
+.tree-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+.tree-toolbar .search { flex:1; min-width:180px; }
+.tree-toolbar .branch-jump { display:flex; flex-wrap:wrap; align-items:center; gap:4px; }
+.tree-toolbar .branch-jump .jump-lbl { font-size:14.5px; color:var(--muted); margin-right:2px; }
+/* 長輩好點：工具列控制項一律至少 44px 高、字 15px */
+.tree-toolbar .input, .tree-toolbar .select, .tree-toolbar .btn { min-height:44px; font-size:15px; }
+.tree-toolbar .seg button { min-height:38px; font-size:15px; padding:6px 16px; }
+.tree-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:18px; align-items:start; }
+.tree { display:flex; flex-direction:column; gap:2px; }
+.tnode { }
+/* 一人一行（放不下才折行）：箭頭｜頭像｜姓名 字號｜第十八世 · 房 · 父名｜外姻｜男女｜存歿｜生卒年 */
+.tnode .trow { display:flex; align-items:center; gap:8px; min-height:48px; padding:5px 10px 5px 2px; border-radius:9px; cursor:pointer; transition:background .12s; border:1px solid transparent; }
+.tnode .trow:hover { background:var(--panel-2); }
+.tnode .trow.sel { background:var(--accent-tint); border-color:var(--accent-soft); }
+.tnode .caret-btn { flex:0 0 auto; width:36px; height:36px; display:grid; place-items:center; padding:0; border:0; border-radius:8px; background:transparent; color:var(--muted); cursor:pointer; }
+.tnode .caret-btn:hover { background:var(--line); color:var(--ink-2); }
+.tnode .caret-btn[aria-hidden="true"]:hover { background:transparent; }
+.tnode .caret { width:18px; height:18px; transition:transform .15s; }
+.tnode.open > .trow .caret { transform:rotate(90deg); }
+.tnode .caret.leaf { visibility:hidden; }
+.tnode .ava { width:32px; height:32px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center;
+  font-size:14px; font-weight:700; background:var(--accent-soft); color:var(--accent-strong); }
+.tnode .ava.f { background:var(--fem-soft); color:var(--fem); }
+.tnode .ava.past { background:var(--past-soft); color:var(--past); }
+.tnode .who { flex:1; min-width:0; display:flex; align-items:center; flex-wrap:wrap; gap:3px 14px; }
+.tnode .who .nm { font-size:17px; font-weight:600; color:var(--ink); white-space:nowrap; }
+.tnode .who .nm .style-name { color:var(--muted); font-weight:400; font-size:14.5px; }
+.tnode .who .meta { font-size:14.5px; color:var(--muted); display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+.tnode .who .meta .chip { font-size:14px; padding:2px 9px; }
+.tnode .who .meta .yrs { font-family:var(--font-mono); font-size:14px; color:var(--ink-2); }
+.tnode .kids { margin-left:10px; padding-left:8px; border-left:1px solid var(--line); display:none; }  /* 縮排收窄：11→22世約10層仍不擠壓 */
+.tree { overflow-x:auto; }                       /* 極窄時仍可橫向捲動，不把姓名擠斷 */
+.tnode.open > .kids { display:flex; flex-direction:column; gap:2px; margin-top:2px; }
+.dim { color:var(--muted); }                     /* 次要字：舊版 --faint 白底對比約 2.6:1，長輩看不到 */
+
+/* ============================================================
+   族譜樹狀圖（手寫 SVG）.tree-svg
+   容器／節點／連線／摺疊徽章／圖例，全部只用既有 token 變數。
+   ============================================================ */
+.tree-layout.dg-on { grid-template-columns:1fr; }          /* 窄畫面：圖佔全寬，詳情卡在圖下方 */
+.tree-layout.dg-on > .card { max-width:860px; }
+/* 樹狀圖：上方操作列（svg 外，不會被拖曳判定吃掉）＋畫布＋下方圖例 */
+.tree-svg { display:flex; flex-direction:column; overflow:hidden; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--r-card); height:clamp(320px, calc(100vh / var(--uiz, 1) - 330px), 860px); }
+.tree-svg .dg-bar { flex:0 0 auto; display:flex; align-items:center; flex-wrap:wrap; gap:6px; padding:8px 10px;
+  border-bottom:1px solid var(--line); background:var(--panel-2); }
+.tree-svg .dg-bar .sp { flex:1; }
+.tree-svg .dg-bar .btn { min-height:40px; font-size:15px; }
+.tree-svg .dg-bar .seg button { min-height:36px; font-size:15px; padding:6px 14px; }
+.tree-svg .dg-canvas { flex:1 1 auto; min-height:0; position:relative; }
+.tree-svg svg { width:100%; height:100%; display:block; cursor:grab; touch-action:none; user-select:none; }
+.tree-svg.dragging svg { cursor:grabbing; }
+/* 節點：圓角矩形＋姓名（16px）＋配偶（框內第二行）；主框依房頭著色（b0~b5 迴圈配色），已歿用 --past 色系 */
+.tree-svg .dgn .box { fill:var(--panel-2); stroke:var(--line-strong); stroke-width:2.4; cursor:pointer; }
+.tree-svg .dgn .nm { fill:var(--ink); font-family:var(--font-ui); font-size:16px; font-weight:700; cursor:pointer; }
+.tree-svg .dgn.past .box { fill:var(--past-soft); }
+.tree-svg .dgn.past .nm { fill:var(--past); }
+/* 房頭六色：類別色需高對比可辨（原 token 配色 teal/綠幾不可分），
+   採色盲友善調色盤；「設定 → 房頭管理」可逐房自訂（動態 style 覆蓋這裡）。只染主框，不染徽章 */
+.tree-svg .dgn.b0 .box { stroke:#0072B2; }   /* 藍 */
+.tree-svg .dgn.b1 .box { stroke:#E69F00; }   /* 橙 */
+.tree-svg .dgn.b2 .box { stroke:#009E73; }   /* 綠 */
+.tree-svg .dgn.b3 .box { stroke:#CC79A7; }   /* 粉紫 */
+.tree-svg .dgn.b4 .box { stroke:#D55E00; }   /* 磚紅 */
+.tree-svg .dgn.b5 .box { stroke:#56B4E9; }   /* 天藍 */
+.tree-svg .dgn.sel .box { stroke:var(--accent-strong); stroke-width:3.4; fill:var(--accent-tint); }
+.tree-svg .dgn.sel .nm { fill:var(--accent-strong); }
+.tree-svg .dgn.focus .box { stroke-width:3.4; filter:drop-shadow(0 2px 4px rgba(20,20,30,.18)); }
+/* 配偶：框內第二行；可點選查看詳情 */
+.tree-svg .dgn .sp { fill:var(--ink-2); font-family:var(--font-ui); font-size:13.5px; cursor:pointer; }
+.tree-svg .dgn .sp.past { fill:var(--past); }
+.tree-svg .dgn .sp.sel { fill:var(--accent-strong); font-weight:700; }
+/* 房頭起點小標（框上緣，房色底白字） */
+.tree-svg .dg-btag rect { fill:var(--muted); }
+.tree-svg .dg-btag text { fill:#fff; font-family:var(--font-ui); font-size:12.5px; font-weight:700; }
+.tree-svg .dg-btag.b0 rect { fill:#0072B2; }
+.tree-svg .dg-btag.b1 rect { fill:#B87F00; }
+.tree-svg .dg-btag.b2 rect { fill:#007A5A; }
+.tree-svg .dg-btag.b3 rect { fill:#A8568A; }
+.tree-svg .dg-btag.b4 rect { fill:#B44F00; }
+.tree-svg .dg-btag.b5 rect { fill:#2B8FC7; }
+/* 親子連線（肘形折線） */
+.tree-svg .dg-edge { fill:none; stroke:var(--line-strong); stroke-width:1.4; }
+/* 摺疊徽章：收合「＋N 人」（N＝隱藏後代數）、展開「收合」；外圈透明大點擊區 */
+.tree-svg .dg-badge .hit { fill:transparent; stroke:none; cursor:pointer; }
+.tree-svg .dg-badge .pill { fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.2; cursor:pointer; }
+.tree-svg .dg-badge text { fill:var(--accent-strong); font-family:var(--font-ui); font-size:13.5px; font-weight:700; cursor:pointer; }
+.tree-svg .dg-empty { fill:var(--muted); font-family:var(--font-ui); font-size:15px; }
+/* 世代欄（總覽每一世只寫一次）、家系圖左側「父母輩／第十八世」、子女數、換焦點小鈕 */
+.tree-svg .dg-gen { fill:var(--muted); font-family:var(--font-ui); font-size:14px; font-weight:700; }
+.tree-svg .dg-band { fill:var(--ink-2); font-family:var(--font-ui); font-size:14px; font-weight:700; }
+.tree-svg .dg-band .g { fill:var(--muted); font-weight:400; font-size:13.5px; }
+.tree-svg .dg-kn { fill:var(--muted); font-family:var(--font-ui); font-size:13px; }
+.tree-svg .dg-chip rect { fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.2; cursor:pointer; }
+.tree-svg .dg-chip text { fill:var(--accent-strong); font-family:var(--font-ui); font-size:14px; font-weight:700; cursor:pointer; }
+.tree-svg .dg-chip.soft rect { fill:var(--panel); stroke:var(--line-strong); }
+.tree-svg .dg-chip.soft text { fill:var(--ink-2); font-weight:600; }
+/* 圖例（圖下方長條，不擋住內容）：房頭色點＋不分房＋已歿＋操作提示 */
+.tree-svg-legend { flex:0 0 auto; display:flex; align-items:center; flex-wrap:wrap;
+  gap:6px 14px; padding:8px 12px; font-size:14px; color:var(--ink-2);
+  border-top:1px solid var(--line); background:var(--panel-2); }
+.tree-svg-legend .lg-title { color:var(--muted); }
+.tree-svg-legend .lg { display:inline-flex; align-items:center; gap:6px; }
+/* 房名是按鈕（跳到該房始祖），要長得像按鈕；不分房／已歿只是說明 */
+.tree-svg-legend .lg-btn { min-height:34px; padding:3px 12px; border:1px solid var(--line-strong); border-radius:var(--r-btn);
+  background:var(--panel); color:var(--ink); font:inherit; font-weight:600; cursor:pointer; }
+.tree-svg-legend .lg-btn:hover { background:var(--accent-tint); border-color:var(--accent); }
+/* 色塊＝實心彩色小圓點（總幹事要「顏色的小圓點，點下去對應指定的房」）。舊版是「空心」圓圈，像單選鈕、
+   又按不動才出問題；實心圓點包在房名按鈕裡，點圓點或房名都跳到該房始祖 */
+.tree-svg-legend .sw { width:14px; height:14px; border-radius:50%; background:var(--line-strong); border:2px solid var(--line-strong); flex:0 0 auto; }
+.tree-svg-legend .sw.b0 { background:#0072B2; border-color:#0072B2; }
+.tree-svg-legend .sw.b1 { background:#E69F00; border-color:#E69F00; }
+.tree-svg-legend .sw.b2 { background:#009E73; border-color:#009E73; }
+.tree-svg-legend .sw.b3 { background:#CC79A7; border-color:#CC79A7; }
+.tree-svg-legend .sw.b4 { background:#D55E00; border-color:#D55E00; }
+.tree-svg-legend .sw.b5 { background:#56B4E9; border-color:#56B4E9; }
+.tree-svg-legend .sw.none { background:var(--panel-2); border-color:var(--line-strong); }
+.tree-svg-legend .sw.past { background:var(--past-soft); border-color:var(--past); }
+.tree-svg-legend .hint { color:var(--muted); margin-left:auto; }
+
+/* 成員詳情卡 */
+.member-detail { }
+.md-head { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.md-head .ava { width:52px; height:52px; border-radius:14px; display:grid; place-items:center; font-size:20px; font-weight:700; background:var(--accent-soft); color:var(--accent-strong); }
+.md-head .ava.f { background:var(--fem-soft); color:var(--fem); }
+.md-head .btn { flex:0 0 auto; white-space:nowrap; }   /* 卡片窄時「編輯」不折成兩行 */
+.md-actions .btn { margin:-4px 0 12px; min-height:40px; font-size:15px; }
+.md-head .ava.past { background:var(--past-soft); color:var(--past); }
+.md-head .who .nm { font-size:22px; font-weight:700; }
+.md-head .who .sub { font-size:15px; color:var(--muted); margin-top:2px; }
+.md-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
+.md-grid .f { display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--line); font-size:15.5px; }
+.md-grid .f .k { color:var(--muted); min-width:76px; flex:0 0 auto; }
+.md-grid .f .v { color:var(--ink); }
+@media (max-width:720px) { .md-grid { grid-template-columns:1fr; } }
+/* 族譜頁放寬（舊版 1080px 上限把列表鎖在約 480px）；容器夠寬時資料卡固定在右側，列表與樹狀圖都是。
+   用 container query 不用 @media：介面縮放是 body 的 CSS zoom，@media 量到的是未縮放的視窗寬 */
+.view[data-view="tree"] { max-width:none; container-type:inline-size; }
+@container (min-width:960px) {
+  .tree-layout { grid-template-columns:minmax(0,1fr) minmax(340px,400px); }
+  .tree-layout.dg-on { grid-template-columns:minmax(0,1fr) 340px; }
+  .tree-layout.dg-on > .card { max-width:none; }
+  .tree-layout > .card { position:sticky; top:12px; max-height:calc(100vh / var(--uiz, 1) - 210px); overflow:auto; }
+  .tree-layout .md-grid { grid-template-columns:1fr; }
+  .tree-svg { height:max(420px, calc(100vh / var(--uiz, 1) - 200px)); }
+}
+
+/* ============================================================
+   搜尋式成員選擇器（type-to-search combobox）.mpick
+   取代灌全部成員的 <select>；觸發框沿用 .input 外觀，
+   下方絕對定位結果面板可捲動，每列顯示姓名與灰色識別標籤。
+   ============================================================ */
+.mpick { position:relative; width:100%; }
+/* 觸發框：外觀比照 .input，內含已選文字／placeholder 與右側圖示 */
+.mpick-trigger { display:flex; align-items:center; gap:8px; width:100%;
+  background:var(--panel-2); color:var(--ink); border:1px solid var(--line-strong);
+  border-radius:var(--r-btn); padding:9px 11px; font-size:14px; cursor:text; }
+.mpick.open .mpick-trigger { border-color:var(--accent); }
+.mpick-trigger .mpick-input { flex:1; min-width:0; border:0; outline:none; background:transparent;
+  color:var(--ink); font-family:inherit; font-size:14px; padding:0; }
+.mpick-trigger .mpick-input::placeholder { color:var(--faint); }
+/* 已選顯示文字（未展開搜尋時）：姓名 + 灰色 label */
+.mpick-trigger .mpick-current { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpick-trigger .mpick-current.placeholder { color:var(--faint); }
+.mpick-trigger .mpick-current .mpick-tag { color:var(--muted); font-size:13px; margin-left:7px; }
+/* 清除鈕：有選取時才顯示 */
+.mpick-clear { flex:0 0 auto; width:26px; height:26px; border:0; padding:0; cursor:pointer;
+  background:transparent; color:var(--faint); display:none; place-items:center; border-radius:50%; }
+.mpick-clear:hover { color:var(--ink-2); background:var(--line); }
+.mpick-clear svg { width:15px; height:15px; }
+.mpick.has-value .mpick-clear { display:grid; }
+.mpick-caret { flex:0 0 auto; width:14px; height:14px; color:var(--faint); transition:transform .15s; }
+.mpick.open .mpick-caret { transform:rotate(180deg); }
+
+/* 結果面板：絕對定位於觸發框下方，可捲動 */
+.mpick-panel { position:absolute; left:0; right:0; top:calc(100% + 5px); z-index:1500;
+  background:var(--panel); border:1px solid var(--line-strong); border-radius:var(--r-card);
+  box-shadow:var(--shadow); max-height:260px; overflow-y:auto; padding:5px; display:none; }
+.mpick.open .mpick-panel { display:block; }
+.mpick-item { display:flex; align-items:baseline; gap:9px; padding:8px 10px; border-radius:7px;
+  cursor:pointer; transition:background .1s; }
+.mpick-item:hover, .mpick-item.active { background:var(--accent-tint); }
+.mpick-item .nm { font-size:14.5px; font-weight:600; color:var(--ink); flex:0 0 auto; }
+.mpick-item .tag { font-size:13px; color:var(--muted); min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mpick-empty { padding:14px 12px; font-size:13.5px; color:var(--muted); text-align:center; }
+/* allowCreate：「＋ 建立新成員」可點列（查無符合時出現於面板尾端） */
+.mpick-item.mpick-create { border-top:1px dashed var(--line); border-radius:0 0 7px 7px; }
+.mpick-item.mpick-create .nm { color:var(--accent-strong); flex:1; min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ============================================================
+   稱謂計算器
+   ============================================================ */
+.kin-pick { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.kin-pick .who-pick { flex:1; min-width:200px; }
+.kin-pick .who-pick .lbl { font-size:13px; color:var(--muted); margin-bottom:6px; }
+.kin-swap { width:34px; height:34px; border-radius:50%; border:1px solid var(--line-strong); background:var(--panel); color:var(--muted); cursor:pointer; display:grid; place-items:center; flex:0 0 auto; align-self:flex-end; margin-bottom:1px; }
+.kin-result { margin-top:18px; display:flex; flex-direction:column; gap:12px; }
+.kin-card { background:var(--accent-tint); border:1px solid var(--accent-soft); border-radius:var(--r-card); padding:16px 18px; }
+.kin-card .dir { font-size:13px; color:var(--muted); margin-bottom:4px; }
+.kin-card .term { font-size:23px; font-weight:700; color:var(--accent-strong); font-family:var(--font-disp); }
+.kin-path { font-size:13.5px; color:var(--muted); line-height:1.7; }
+.kin-path .seg { display:inline; padding:0; border:0; background:none; border-radius:0; color:var(--ink-2); font-weight:500; }
+
+/* ============================================================
+   祭祖通知
+   ============================================================ */
+.event-card { display:flex; gap:14px; align-items:flex-start; }
+.event-card .date-box { flex:0 0 auto; width:74px; text-align:center; border:1px solid var(--line); border-radius:10px; padding:8px 4px; background:var(--panel-2); }
+.event-card .date-box .m { font-size:12.5px; color:var(--accent-strong); font-weight:700; }
+.event-card .date-box .d { font-size:25px; font-weight:700; font-family:var(--font-disp); line-height:1.1; }
+.event-card .date-box .lunar { font-size:12px; color:var(--muted); margin-top:2px; }
+.event-card .ev-body { flex:1; min-width:0; }
+.event-card .ev-body .nm { font-size:16.5px; font-weight:700; }
+.event-card .ev-body .meta { font-size:13.5px; color:var(--muted); margin-top:3px; line-height:1.6; }
+.notice-out { margin-top:12px; }
+.notice-out textarea { width:100%; min-height:120px; resize:vertical; font-size:14px; line-height:1.7; font-family:var(--font-ui); }
+
+/* ============================================================
+   列印啟動器
+   ============================================================ */
+.print-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+.doc-card { display:flex; flex-direction:column; gap:8px; padding:16px; border:1px solid var(--line); border-radius:var(--r-card); background:var(--panel); transition:border-color .15s,background .15s; text-decoration:none; color:inherit; }
+.doc-card:hover { border-color:var(--accent); background:var(--accent-tint); }
+.doc-card .ic { width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent-strong); }
+.doc-card .ic svg { width:19px; height:19px; }
+.doc-card .nm { font-size:15.5px; font-weight:700; }
+.doc-card .ds { font-size:13px; color:var(--muted); line-height:1.6; }
+/* 帶入家族資料列印卡：控制元件（選人／房頭下拉）與靠底按鈕，只用既有 token */
+.doc-card .print-src { margin-top:2px; }
+.doc-card .print-src .select { width:100%; }
+.doc-card .btn { margin-top:auto; justify-content:center; }
+
+/* ============================================================
+   編輯鎖 modal
+   ============================================================ */
+.modal-mask { position:fixed; inset:0; background:rgba(20,20,30,.42); display:flex; align-items:center; justify-content:center; z-index:2000; padding:20px; }
+.modal-mask[hidden] { display:none; }
+.modal { width:100%; max-width:380px; background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:22px; }
+.modal h3 { font-family:var(--font-disp); font-size:18px; margin:0 0 4px; }
+.modal .sub { font-size:13.5px; color:var(--muted); margin-bottom:16px; line-height:1.6; }
+.modal .field { margin-bottom:14px; }
+.modal .field .lbl { font-size:13px; color:var(--ink-2); margin-bottom:6px; }
+.modal .pin-in { font-family:var(--font-mono); font-size:19px; letter-spacing:6px; text-align:center; }
+.modal .acts { display:flex; gap:10px; margin-top:6px; }
+.modal .acts .btn { flex:1; justify-content:center; }
+
+/* 成員編輯表單 modal：欄位較多 → 加寬、限高可捲動、常用欄位雙欄排版 */
+.modal-lg { max-width:540px; max-height:calc(100vh / var(--uiz, 1) - 48px); overflow-y:auto; }
+.mform-2col { display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
+@media (max-width:560px) { .mform-2col { grid-template-columns:1fr; } }
+
+/* ── 親屬關係管理（成員編輯表單）與詳情卡關係列 ──
+   只用既有 token（--line/--panel-2/--muted/--faint/--accent-strong），不寫死色碼 */
+.rel-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+.rel-row { display:flex; align-items:center; gap:8px; padding:6px 10px;
+  border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
+.rel-row .rel-kind { font-size:13px; color:var(--muted); flex:none; }
+.rel-row .rel-name { font-weight:600; color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rel-row .rel-del { margin-left:auto; flex:none; }
+/* 配偶列「狀態」下拉（可直接改婚姻狀態）：緊湊版 .select，靠右與「移除」同側 */
+.rel-row .rel-st { margin-left:auto; flex:none; padding:4px 24px 4px 8px; font-size:13px;
+  background-position:right 7px center; }
+.rel-row .rel-st ~ .rel-del { margin-left:0; }
+.rel-empty { font-size:13px; color:var(--faint); padding:2px 0 4px; }
+.rel-add { display:flex; align-items:center; gap:8px; }
+.rel-add .rel-pick { flex:1; min-width:0; }
+.rel-add .select { flex:none; }
+.rel-add .btn { flex:none; white-space:nowrap; }
+@media (max-width:560px) { .rel-add { flex-wrap:wrap; } .rel-add .rel-pick { flex-basis:100%; } }
+/* 詳情卡：父母／配偶／子女可點跳（data-goto → 樹中定位） */
+.rel-link { color:var(--accent-strong); cursor:pointer; text-decoration:none; }
+.rel-link:hover { text-decoration:underline; }
+.rel-item { display:inline-flex; align-items:center; gap:4px; margin-right:2px; }
+
+/* 危險操作（刪除成員）：沿用警示語意色 token，不寫死色碼 */
+.btn-danger { background:var(--panel); color:var(--live); border-color:var(--live); }
+.btn-danger:hover { background:var(--live-soft); border-color:var(--live); }
+
+/* 編輯模式才顯示的操作 */
+[data-edit="off"] .edit-only { display:none !important; }
+
+/* ── 編輯入口可見化（.locked-hint）──
+   常駐可見的編輯入口：瀏覽模式加 🔒 前綴並弱化為 ghost 樣貌，
+   一看即知「可編輯但要先解鎖」；點擊由 app.js requireEdit 引導解鎖。
+   只用既有 token（--panel/--panel-2/--ink-2/--muted/--line-strong），不寫死色碼。 */
+[data-edit="off"] .locked-hint::before { content:"🔒"; font-size:.92em; line-height:1; }
+[data-edit="off"] .locked-hint.btn-primary {
+  background:var(--panel); color:var(--ink-2); border-color:var(--line-strong); box-shadow:none;
+}
+[data-edit="off"] .locked-hint.btn-primary:hover { background:var(--panel-2); border-color:var(--muted); }
+
+/* ── 祭祖通知作業台：收件人清單表 ── */
+.ntc-table { width:100%; border-collapse:collapse; font-size:14px; margin-top:12px; }
+.ntc-table th, .ntc-table td { border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top; }
+.ntc-table th { background:var(--panel-2); color:var(--muted); font-size:13px; font-weight:600; white-space:nowrap; }
+.ntc-table td.msg { white-space:pre-wrap; color:var(--ink-2); line-height:1.6; }
+
+/* ── Toast ── */
+.toast-host { position:fixed; right:18px; bottom:18px; z-index:9999; display:flex; flex-direction:column; gap:10px; max-width:min(420px,calc(100vw - 36px)); pointer-events:none; }
+.toast { pointer-events:auto; display:flex; align-items:flex-start; gap:10px; padding:11px 13px; border-radius:var(--r-card);
+  border:1px solid var(--line); background:var(--panel); box-shadow:var(--shadow); color:var(--ink); font-size:14px; line-height:1.5;
+  opacity:0; transform:translateY(8px); transition:opacity .22s ease,transform .22s ease; }
+.toast.show { opacity:1; transform:translateY(0); }
+.toast-ok { background:var(--ok-soft); border-color:var(--ok); }
+.toast-err { background:var(--live-soft); border-color:var(--live); }
+
+@media (max-width:760px) { .view { padding:18px 16px 36px; } .md-grid { grid-template-columns:1fr; } .tree-layout { grid-template-columns:1fr; } }
+@media (prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; } }
+
+/* ── 成員表單分區與曆轉換提示（2026-08-03 UX：欄位太多難掃視、日期缺對照）── */
+.mform-sec { margin:22px 0 10px; padding:7px 12px; font-weight:700; font-size:14.5px;
+  color:var(--ink); background:rgba(14,142,122,.09); border-left:4px solid var(--accent);
+  border-radius:0 8px 8px 0; letter-spacing:.4px; }
+.mform-sec:first-of-type { margin-top:8px; }
+.hint-lunar { margin-top:4px; font-size:12.5px; color:var(--accent); min-height:16px; }
+.hint-lunar.warn { color:#b8860b; }
+
+/* ── 穴排位格子編輯（視圖 tomb；2026-08-21）── */
+.tomb-grid { margin-top:0; }
+.tomb-grid th.rl { text-align:center; white-space:nowrap; width:6em; }
+.tomb-grid td { cursor:pointer; text-align:center; min-width:6em; height:2.8em; padding:4px 6px; user-select:none; }
+.tomb-grid td.filled { background:var(--accent-soft); color:var(--ink); font-weight:600; }
+.tomb-grid td.txt { color:var(--muted); }
+.tomb-grid td:hover { outline:2px solid var(--accent); outline-offset:-2px; }
+/* 穴排位版型（面板／階梯）的編輯預覽：上方小字、直書、面板並排、階梯置中 */
+.tomb-grid td .tg-top { display:block; font-size:11px; font-weight:400; color:var(--muted); line-height:1.2; }
+.tomb-grid td.v { min-width:2.6em; height:7em; vertical-align:top; padding:4px 2px; }
+.tomb-grid td.v .tg-nm { writing-mode:vertical-rl; text-orientation:upright; display:inline-block; }
+.tomb-panels-ed { display:flex; gap:14px; align-items:flex-start; }
+.tomb-panels-ed .tomb-grid td { min-width:4.6em; }
+.tomb-steps-ed { display:flex; flex-direction:column; align-items:center; gap:6px; }
+#tomb-cell-mask .modal { max-width:460px; }

@@ -1,0 +1,29 @@
+# 繫族 (KinLink) ｜ 執行階段相依套件
+# 原則：完全離線、最少相依。能用 Python 標準庫就不引入第三方套件。
+#
+# === 標準庫（無須安裝，列此僅為提醒對接者）===
+#   sqlite3      ── 內嵌式資料庫（WAL 模式防熱插拔損壞），Python 內建
+#   http.server  ── 本機 HTTP 伺服器（ThreadingHTTPServer），不引入 Flask/FastAPI
+#   json / urllib.parse / secrets / mimetypes / shutil / tempfile ── 皆標準庫
+#
+# === 第三方執行階段相依 ===
+
+# 原生視窗：開系統內建 WebView2 (Edge Chromium) 視窗，純載入本機網址、不用 js_api。
+# 缺 WebView2 Runtime 時程式自行退回預設瀏覽器。
+# 不打包 Chromium —— 引擎由作業系統提供，故 exe 體積小。
+pywebview==5.4
+
+# 農曆 ⇄ 國曆換算：規格採「現成離線函式庫查表」，不自研萬年曆。
+# 用於生卒曆法獨立記錄、農曆忌日換算當年度國曆日期、閏月忌日判定。
+# 【2026-09-10 換套件】原用 lunardate，但它是 GPLv3——打包進我們散布的 exe 會讓
+# 整顆 exe 必須以 GPL 授權，與本專案 MIT 衝突。改用 borax（MIT）。1900–2099 逐日全比：
+# 族譜會用到的年代 borax 與天文演算一致、反而修正了舊套件 1933／1954／1978 年的錯；
+# 僅 2089／2097 年有誤（無人使用）。kinlink/lunar.py 有薄轉接維持舊介面。
+borax==4.1.3
+
+# === 打包工具（僅建置時需要，執行階段不需要）===
+# 建置請見 build_exe.bat；亦可手動：pip install pyinstaller==6.10.0
+# pyinstaller==6.10.0
+#
+# 本檔只鎖直接相依；傳遞相依（pythonnet、bottle…）與打包工具的完整版本鎖在 constraints.txt，
+# build_exe.bat 以 pip install -r requirements.txt -c constraints.txt 套用（打包需 Python 3.10～3.13）。

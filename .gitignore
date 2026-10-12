@@ -1,0 +1,61 @@
+# === 隱私：真實家族資料絕不進公開 repo ===
+# 原始祖譜資料（含真實姓名/地址/電話）
+*祖譜資料/
+# 任何家族的私有資料夾統一放這裡
+data-private/
+家族資料-私有/
+# 總幹事自行整備留存的完整套件（exe＋db＋祖譜資料），任何工具不得寫入
+繫族-*家族/
+
+# === 資料庫與備份（含個資，不公開） ===
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+/backups/
+*.kinlink
+# 匯出的 CSV 是全族明文個資（kinlink_members.csv／kinlink_tomb_site_*.csv），
+# 比 .db 更好讀好散布，一律不進 repo。要公開的範本 CSV 請個別 ! 放行。
+*.csv
+
+
+# 家族專屬匯入腳本（程式碼內嵌真實族人姓名，開源不隨附）
+tools/
+
+# 自動測試：只留在維護者電腦、打包前全部跑過，不隨原始碼公開（總幹事 2026-10-12 決定）
+tests/
+
+# === 內部文件（開發日誌與交接材料，內文含真實族人姓名，不進公開 repo） ===
+# docs/ 採白名單：預設全擋，只放行「與實作核對過、內容乾淨」的技術文件。
+# 新增 docs 文件時預設就是私有的；要公開必須自己加 !放行行，並先跑
+# tests/test_opensource_pii.py 確認乾淨。
+docs/*
+!docs/架構設計.md
+!docs/執行與打包.md
+!docs/規格.md
+
+# === 暫存 / 產物 ===
+scratchpad/
+dist/
+build/
+build_venv/
+*.exe
+__pycache__/
+*.pyc
+*.spec.bak
+# 改前備份（鐵律3 產物）：一律收進 backups/程式碼歸檔_*，不進 repo 也不得留在
+# webview/ 或 列印範本/（那兩夾會整夾打包進 exe）
+*.bak-*
+
+# 本機導覽（總幹事用，開源門面由 README 擔任）
+00-這是什麼資料夾.txt
+
+# === Office 鎖檔與系統垃圾 ===
+~$*
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# 開發輔助設定（Claude Code 的預覽伺服器設定等），與專案功能無關
+.claude/

@@ -1,0 +1,109 @@
+/* 繫族 KinLink — 共用列印樣式表（統一契約）
+   所有列印文件一律 <link rel="stylesheet" href="assets/print.css">，
+   不得自訂字體/顏色/邊界，統一風格皆源於此檔。
+   輸出方式：瀏覽器原生「列印 / 另存 PDF」。 */
+
+:root {
+  --ink: #1a1a1a;            /* 主文字 */
+  --line: #333;             /* 表格框線 */
+  --muted: #555;            /* 次要文字 */
+  --page-pad: 1.8cm;        /* 版心邊界 */
+  --serif: "標楷體", "DFKai-SB", "BiauKai", "KaiTi", "AR PL UKai TW", serif;
+}
+
+/* ---- 頁面 ---- */
+@page { size: A4 portrait; margin: var(--page-pad); }
+@page landscape { size: A4 landscape; margin: 1.2cm; }
+.sheet.landscape { page: landscape; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--serif);
+  color: var(--ink);
+  font-size: 12pt;
+  line-height: 1.7;
+  background: #f0f0f0;       /* 螢幕預覽底色；列印時被 @page 取代 */
+}
+
+/* 一張「紙」。螢幕上置中呈現 A4，列印時滿版。 */
+.sheet {
+  background: #fff;
+  width: 21cm;
+  min-height: 29.7cm;
+  margin: 0.6cm auto;
+  padding: var(--page-pad);
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+}
+.sheet.landscape { width: 29.7cm; min-height: 21cm; padding: 1.2cm; }
+
+/* ---- 協會抬頭（共用區塊，通知函/標籤/名冊用） ---- */
+.letterhead { text-align: center; border-bottom: 2px solid var(--ink); padding-bottom: 6pt; margin-bottom: 12pt; }
+.letterhead .org { font-size: 20pt; font-weight: bold; letter-spacing: 2pt; }
+.letterhead .org-en { font-size: 9pt; color: var(--muted); }
+.letterhead .contact { font-size: 9.5pt; color: var(--muted); margin-top: 4pt; line-height: 1.4; }
+
+/* ---- 文件大標題 ---- */
+.doc-title { text-align: center; font-size: 16pt; font-weight: bold; letter-spacing: 3pt; margin: 6pt 0 12pt; }
+.doc-subtitle { text-align: center; font-size: 11pt; color: var(--muted); margin-bottom: 10pt; }
+
+/* ---- 表格（族譜表/牌位/名冊共用） ---- */
+table.grid { width: 100%; border-collapse: collapse; font-size: 11pt; }
+table.grid th, table.grid td { border: 1px solid var(--line); padding: 4pt 6pt; vertical-align: middle; }
+table.grid th { background: #ececec; font-weight: bold; text-align: center; white-space: nowrap; }
+table.grid td.c { text-align: center; }
+table.grid .narrative td { border: none; padding-top: 10pt; line-height: 1.9; text-align: justify; font-size: 11pt; }
+
+/* 缺漏標記：欠載 / 〇〇 以淡色呈現，但仍照實列印 */
+.missing { color: #999; }
+
+/* ---- 公文（通知函）排版 ---- */
+/* 行距收斂（原 2 → 1.6／1.65）：通函須恰好一張 A4——合併寄送是雙面「寄件頁／通函」
+   一正一反，通函多一頁就整批錯位。範本與 webview/print.html 的輸出共用這組值。 */
+.gov-meta { font-size: 11pt; line-height: 1.6; margin: 8pt 0; }
+.gov-meta .row { display: flex; }
+/* height/border/padding 歸零：蓋掉下方「寄信標籤」的裸 .label 盒規則
+   （否則公文欄位名被撐成 6cm 虛線大框，一頁公文變好幾頁）。
+   寬 8.5em：「密等及解密條件：」8 字，7em 會折行 */
+.gov-meta .label { width: 8.5em; flex: none; height: auto; border: none; padding: 0; }
+.gov-body { font-size: 12pt; line-height: 1.65; }
+.gov-body .subject { font-weight: bold; margin: 8pt 0; }
+.gov-body ol { margin: 0; padding-left: 1.6em; }
+.gov-body ol li { margin-bottom: 6pt; }
+
+/* ---- 寄信標籤 ---- */
+.labels { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
+/* break-inside: avoid：一塊不可跨頁切開（否則地址在上一頁、姓名跑到下一頁，剪下來名址分家） */
+.label { border: 1px dashed #aaa; padding: 10pt 12pt; height: 6cm; display: flex; flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
+.label .sender { font-size: 9pt; color: var(--muted); border-bottom: 1px solid #ccc; padding-bottom: 4pt; }
+.label .print-mark { float: right; border: 1px solid var(--muted); padding: 0 4pt; font-size: 8.5pt; }
+.label .recipient { margin-top: auto; }
+.label .recipient .zip { font-size: 13pt; letter-spacing: 3pt; }
+.label .recipient .addr { font-size: 12pt; margin: 2pt 0; }
+.label .recipient .name { font-size: 16pt; letter-spacing: 6pt; font-weight: bold; }
+.label .recipient .name .salut { font-size: 11pt; letter-spacing: normal; font-weight: normal; }
+
+/* ---- 穴排位網格 ---- */
+table.tomb { border-collapse: collapse; font-size: 10pt; margin: 0 auto; }
+table.tomb td, table.tomb th { border: 1px solid var(--line); padding: 3pt 5pt; text-align: center; min-width: 3.4em; }
+table.tomb th.gen { background: #ececec; writing-mode: vertical-rl; white-space: nowrap; }
+
+/* ---- 頁尾 ---- */
+.foot { margin-top: 14pt; font-size: 9pt; color: var(--muted); text-align: right; }
+
+/* ---- 列印時：去背景、去陰影、分頁 ---- */
+@media print {
+  body { background: #fff; }
+  .sheet { width: auto; min-height: auto; margin: 0; padding: 0; box-shadow: none; }
+  /* 橫式也要歸零：螢幕用的 .sheet.landscape（29.7×21cm＋內距）權重比上一行高，不重設的話
+     列印時照樣撐滿 21cm，再加 @page 邊界必溢出一張空白頁（穴排位圖每個場地多一張白紙）。
+     場地之間的換頁掛在 .sheet 本身（.sheet.landscape.page-break），不要插空的分頁 div。 */
+  .sheet.landscape { width: auto; min-height: auto; padding: 0; }
+  .no-print { display: none !important; }
+  .page-break { page-break-before: always; }
+  .label { border-color: transparent; }   /* 信封實印時不要裁切線 */
+}
+
+/* 螢幕上的列印按鈕（列印時自動隱藏） */
+.toolbar { position: sticky; top: 0; text-align: center; padding: 8pt; }
+.toolbar button { font-family: var(--serif); font-size: 12pt; padding: 6pt 18pt; cursor: pointer; }

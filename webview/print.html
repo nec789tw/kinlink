@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>繫族 列印</title>
+  <!-- 版式契約：一律沿用 列印範本/assets/print.css（.sheet / .doc-title / table.grid / .missing / .no-print） -->
+  <link rel="stylesheet" href="/列印範本/assets/print.css">
+  <style>
+    /* 直系族譜表：照原版 xls 欄寬，短欄（關係、姓名、年號、農曆月日…）一行到底，備註吃剩下的寬度 */
+    table.grid.lineage td:not(:last-child) { white-space: nowrap; }
+    /* 穴排位「面板」「階梯」版型（2026-10-12，照家族的穴排位圖）：紅底框、白格、黑線。
+       print-color-adjust:exact——不必另勾「背景圖形」，紅底也印得出來 */
+    .tomb-panels .tp-wrap { display: flex; justify-content: center; align-items: flex-start; gap: 5mm; margin-top: 3mm; }
+    .tomb-panels .tp-panel, .tomb-steps .ts-step { background: #c00000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .tomb-panels .tp-panel { padding: 4.5mm 4.5mm 6mm; }
+    .tomb-panels .tp-grid, .tomb-steps .ts-grid { border-collapse: collapse; background: #fff; }
+    .tomb-panels .tp-grid td { width: 15.5mm; height: 8.6mm; border: 1px solid #000; text-align: center;
+      vertical-align: bottom; padding: 0 1px 1px; }
+    .tomb-panels .tp-top { font-size: 6.5pt; line-height: 1.15; }
+    .tomb-panels .tp-nm { font-size: 11pt; font-weight: bold; line-height: 1.2; min-height: 1.2em; white-space: nowrap; }
+    .tomb-panels .tp-foot, .tomb-steps .ts-head { display: flex; justify-content: space-between; align-items: flex-start;
+      font-size: 11pt; font-weight: bold; }
+    .tomb-panels .tp-foot { margin-top: 3mm; }
+    .tomb-steps .ts-head { margin-bottom: 1mm; }
+    .tomb-panels .tp-date, .tomb-steps .ts-date { text-align: right; }
+    .tomb-steps .ts-addr { max-width: 70mm; }
+    .tomb-steps .ts-step { display: table; margin: 0 auto; padding: 0 7mm; }
+    .tomb-steps .ts-step:first-child { padding-top: 4mm; }
+    .tomb-steps .ts-step:last-child { padding-bottom: 4mm; }
+    .tomb-steps .ts-grid th { font-size: 7pt; font-weight: normal; border: 1px solid #000; height: 4mm; padding: 0; }
+    .tomb-steps .ts-grid th.n1 { font-size: 5pt; letter-spacing: -0.3pt; white-space: nowrap; }
+    .tomb-steps .ts-grid td { width: 8.6mm; height: 20.5mm; border: 1px solid #000; vertical-align: top; padding: 1.2mm 0 0; }
+    .tomb-steps .ts-v { writing-mode: vertical-rl; text-orientation: upright; font-size: 11.5pt; font-weight: bold;
+      letter-spacing: 0.4mm; margin: 0 auto; white-space: pre; }
+    .tomb-steps .ts-head { font-size: 10pt; line-height: 1.45; }
+    /* 可點字修改：聚焦外框只用既有 token（--muted），列印時一律不出現 */
+    #root [contenteditable="true"] { cursor: text; }
+    #root [contenteditable="true"]:focus {
+      outline: 1.5px dashed var(--muted);
+      outline-offset: 2px;
+    }
+    @media print {
+      #root [contenteditable="true"],
+      #root [contenteditable="true"]:focus { outline: none !important; }
+    }
+    /* 寄件資訊頁（mail 合併輸出）：print.css 的 .sender/.print-mark 僅作用於
+       .label 內，這裡是整頁版，放大沿用同視覺 */
+    .mail-page .sender { font-size: 11pt; color: var(--muted); border-bottom: 1px solid #ccc; padding-bottom: 6pt; }
+    .mail-page .print-mark { float: right; border: 1px solid var(--muted); padding: 0 6pt; font-size: 10pt; }
+    /* 通函／開會通知行距收斂（1.6／1.65）與「密等及解密條件」欄寬 8.5em 已併入 print.css，
+       靜態範本 列印範本/通知函.html 與本頁輸出共用同一組值 */
+    /* 內容頁單張守門（fitOnePage）逐級收斂：說明條列太長時由程式實量後掛 fit-1～fit-5，
+       說明字級最低 10pt。!important：蓋過右側聯絡欄行內的 line-height:1.7 */
+    .sheet.fit-1 .gov-body { font-size: 12pt;   line-height: 1.5 !important; }
+    .sheet.fit-1 .gov-meta { font-size: 11pt;   line-height: 1.45 !important; }
+    .sheet.fit-2 .gov-body { font-size: 11.5pt; line-height: 1.45 !important; }
+    .sheet.fit-2 .gov-meta { font-size: 10.5pt; line-height: 1.4 !important; }
+    .sheet.fit-3 .gov-body { font-size: 11pt;   line-height: 1.4 !important; }
+    .sheet.fit-3 .gov-meta { font-size: 10.5pt; line-height: 1.35 !important; }
+    .sheet.fit-4 .gov-body { font-size: 10.5pt; line-height: 1.35 !important; }
+    .sheet.fit-4 .gov-meta { font-size: 10pt;   line-height: 1.3 !important; }
+    .sheet.fit-5 .gov-body { font-size: 10pt;   line-height: 1.3 !important; }
+    .sheet.fit-5 .gov-meta { font-size: 10pt;   line-height: 1.25 !important; }
+    .toolbar .fit-warn { margin-left: 10px; font-size: 12px; color: #b3261e; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <!-- 列印工具列（資料填版完成後才顯示；列印時自動隱藏） -->
+  <div class="toolbar no-print" id="toolbar" contenteditable="false" hidden>
+    <button type="button" onclick="window.print()">列印 / 另存 PDF</button>
+    <span id="toolbar-hint" style="margin-left:8pt;font-size:10pt;color:#555">可直接點文字修改（僅影響本次列印，不回存資料庫）</span>
+  </div>
+
+  <div id="root">
+    <div class="sheet"><div class="doc-subtitle">資料載入中…</div></div>
+  </div>
+
+<script>
+/* ============================================================
+   繫族 KinLink — 資料驅動列印頁 print.html
+   讀 URL 參數：doc（family/tablet/roster/letter/labels/meeting）、id（family 家長）、
+   branch（tablet/roster/labels 房頭，空＝全部）、event（letter 活動編號）、
+   k（後端 token）。meeting（開會通知）無額外參數。
+   fetch /api/* 取真實 DB 資料填入既有列印版式；缺值以空欄或
+   「欠 載」(.missing) 呈現，忠實不失真。純 ES5、零相依、離線可跑。
+   ============================================================ */
+(function () {
+  'use strict';
+
+  /* ── URL 參數 ── */
+  var QS = {};
+  (window.location.search || '').replace(/[?&]([^=&]+)=([^&]*)/g, function (_, k, v) {
+    try { QS[k] = decodeURIComponent(v); } catch (e) { QS[k] = v; }
+    return _;
+  });
+  var TOKEN = QS.k || '';
+
+  /* ── API 包裝：自動帶 token（?k=），錯誤拋出白話訊息 ── */
+  function api(path, query) {
+    var url = '/api' + path, qs = [];
+    if (query) {
+      for (var k in query) {
+        if (query[k] === undefined || query[k] === null || query[k] === '') continue;
+        qs.push(encodeURIComponent(k) + '=' + encodeURIComponent(query[k]));
+      }
+    }
+    if (TOKEN) qs.push('k=' + encodeURIComponent(TOKEN));
+    if (qs.length) url += '?' + qs.join('&');
+    return window.fetch(url).then(jsonOrThrow);
+  }
+  function jsonOrThrow(res) {
+    if (!res.ok) {
+      return res.text().then(function (t) {
+        var msg = t;
+        try { msg = (JSON.parse(t).error || {}).message || t; } catch (e) {}
+        var err = new Error('API ' + res.status + '：' + msg);
+        err.status = res.status;
+        throw err;
+      });
+    }
+    return res.json();
+  }
+  // 寫入（目前只有開會通知「儲存開會內容」用）：同 api() 帶 token；需編輯模式，否則後端回 403
+  function apiPost(path, body) {
+    return window.fetch('/api' + path + (TOKEN ? '?k=' + encodeURIComponent(TOKEN) : ''), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(jsonOrThrow);
+  }
+
+  /* ── 小工具 ── */
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function td(html, cls) { return '<td' + (cls ? ' class="' + cls + '"' : '') + '>' + html + '</td>'; }
+  function miss() { return '<span class="missing">欠 載</span>'; }        // 缺值照實列印（淡色）
+  function orMiss(v) { return v ? esc(v) : miss(); }
+  function genderTxt(g) { return g === 'F' ? '女' : (g === 'M' ? '男' : ''); }
+  function fmtDate(d) {                       // '1858-02-25' → '1858年02月25日'
+    // 也認 1858/2/25、1858.2.25（H-2：舊庫可能留有 Excel 另存的格式，讀的地方都要認得）
+    var m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/.exec(String(d || '').replace(/^\s+/, ''));
+    if (!m) return '';
+    var p2 = function (s) { return (s.length < 2 ? '0' : '') + s; };
+    return m[1] + '年' + p2(m[2]) + '月' + p2(m[3]) + '日';
+  }
+  function deathTxt(m) {                      // 已歿者的「…歿」字樣（國曆優先，退回原始記載）
+    if (!m || m.alive) return '';
+    var d = fmtDate(m.death);
+    if (d) return d + '歿';
+    // 本譜慣例卒年欄只填西元年、月日寫在「卒日原文」：年份要補回去，不能只印原文的月日
+    //（卒年 1835＋原文「05月19日」→「1835年05月19日歿」；原文空白→「1835年歿」）
+    var y = /^\s*(\d{4})(?!\d)/.exec(String(m.death || ''));
+    var yr = y ? y[1] : '';
+    d = String(m.deathOriginal || '').replace(/^\s+|\s+$/g, '');
+    if (!d) return yr ? yr + '年歿' : '（歿）';
+    // 原始記載常整句帶安葬地（「1788/03月28日歿 宜蘭縣…」）或已含「歿」
+    // （「已歿（年月待考）」）：只取到「歿」字為止（含緊接括註），地址甩掉
+    var cut = /^(.*?歿(?:（[^）]*）)?)/.exec(d);
+    d = cut ? cut[1] : d + '歿';
+    // 原文自己已寫了年份就不重複補：同一個西元年，或年號／民國／干支紀年的「…年」
+    //（「道光十五年五月十九日」「民國24年5月19日」「乙未年五月十九日」前面再補「1835年」
+    // 會兩種紀年疊在一起——第二批驗證員）；「已歿（年月待考）」這種「年」前面不是年份的照補
+    var hasYear = (yr && d.indexOf(yr) >= 0) ||
+      /([0-9０-９〇零一二三四五六七八九十廿卅百元]|[甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥])\s*年/.test(d);
+    return (yr && !hasYear) ? yr + '年' + d : d;
+  }
+  var ONES = '一二三四五六七八九';
+  function genCN(n) {                         // 世代數 → 中文（支援 1～99）
+    n = Number(n) || 0;
+    if (n <= 0) return String(n);
+    if (n < 10) return ONES[n - 1];
+    if (n === 10) return '十';
+    if (n < 20) return '十' + ONES[n % 10 - 1];
+    var t = Math.floor(n / 10), o = n % 10;
+    return ONES[t - 1] + '十' + (o ? ONES[o - 1] : '');
+  }
+  var ORD = '長次三四五六七八九十';           // 子女排行（出生序）
+  // 媳婦／女婿排行：原版寫「大媳婦、二媳婦」「大女婿、二女婿」（全家族表與直系族譜表 xls 共 1350 份，
+  // 沒有一筆「長媳婦／次媳婦」），跟子女的「長男、次男」不同字
+  var SPO_ORD = '大二三四五六七八九十';
+  // 姓名逐字拆開（加字距用）：按「字」切，不按 UTF-16 單位切——
+  // split('') 會把戶政罕用字（Unicode 擴充 B 區，如「𠀋」）拆成兩半，印成兩個「�」
+  function chars(s) {
+    return String(s == null ? '' : s).match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\s\S]/g) || [];
+  }
+  function foot(label) {
+    return '<div class="foot">繫族 KinLink ｜ ' + esc(label) + '</div>';
+  }
+
+  /* 大量列印守門：收件人多時（每人 pagesPer 頁）先確認再產生。
+     未標記任何寄送對象時會退回「在世且有地址」全寄，數量可能數百人、上千頁，
+     瀏覽器排版會很久甚至沒回應——此時額外提示可改用戶長／代表制。
+     n 小於門檻直接放行（回 true），使用者按取消回 false。 */
+  function confirmBulk(n, useFlag, pagesPer, label) {
+    var pages = Math.ceil(n * (pagesPer || 1));
+    if (n <= 150) return true;                     // 一般房別/小家族不打擾
+    var msg = '這次要產生【' + label + '】共 ' + n + ' 位收件人、約 ' + pages + ' 頁。\n\n';
+    if (!useFlag) {
+      msg += '目前尚未標記任何「寄送對象」，因此系統列入了全部「在世且有地址」的族親。\n' +
+             '傳統作法是每戶只寄一位戶長／代表——可先到「族譜」逐位勾選「掃墓通知寄送對象」，\n' +
+             '再回來列印，份數會少很多。\n\n';
+    }
+    msg += '份數多時排版需要一段時間，過程中畫面可能會沒有反應，請耐心等候。\n確定要繼續嗎？';
+    return window.confirm(msg);
+  }
+
+  /* 收件人篩選（信封片頭／合併寄送共用）＋「哪些房一份都沒印」。
+     寄送對象（戶長／代表制）：全庫只要有人勾了「掃墓通知寄送對象」，就只寄勾選的人（含地址
+     空白者，空白會印出來提醒補登）；完全沒人勾＝退回「在世且有地址」全寄。這條規則刻意全庫
+     一致（列印頁卡片說明照寫），不逐房切換——逐房切的話，還沒整理的房會突然整房全寄上千份。
+     代價是過渡期（只勾了部分房）沒勾的房一份都不會印：zero 列出「有可寄的人、卻沒人被勾」
+     的房（依設定的房頭順序），由畫面講清楚，不讓人以為全寄了（frontend-4）。 */
+  function pickRecipients(all, branch, order) {
+    var useFlag = all.some(function (m) { return m.mailTarget; });
+    var list = [], canMail = {}, flagged = {};
+    for (var i = 0; i < all.length; i++) {
+      var m = all[i], b = m.branch || '';
+      if (branch && b !== branch) continue;
+      if (!m.alive) continue;
+      var hasAddr = (m.postalCode || '') !== '' || (m.address || '') !== '';
+      if (hasAddr) canMail[b] = true;
+      if (m.mailTarget) flagged[b] = true;
+      if (useFlag ? !!m.mailTarget : hasAddr) list.push(m);
+    }
+    var zero = [];
+    if (useFlag) for (var k in canMail) if (!flagged[k]) zero.push(k);
+    zero.sort(function (a, b) {
+      var oa = order && order[a] !== undefined ? order[a] : 999;
+      var ob = order && order[b] !== undefined ? order[b] : 999;
+      return (oa - ob) || (a < b ? -1 : (a > b ? 1 : 0));
+    });
+    return { list: list, useFlag: useFlag, zero: zero.map(function (z) { return z || '未分房'; }) };
+  }
+  // 查無收件人時的說明：分清「這個範圍還沒人被勾寄送對象」與「真的沒有地址」，
+  // 前者舊版也寫「查無在世且有住址」，總幹事會以為資料沒匯進去
+  function noRecipientMsg(pick, scope, what) {
+    if (pick.useFlag) {
+      return '「' + scope + '」沒有任何在世族親勾選「掃墓通知寄送對象」，所以' + what + '一份都沒有產生。' +
+        '族譜裡只要有人勾了寄送對象，系統就只寄勾選的人，這個範圍還沒有勾。' +
+        '請到「族譜」替這個範圍的戶長／代表勾選「掃墓通知寄送對象」後再開；' +
+        '若想改回「在世且有住址的人全寄」，要把所有人的勾選都取消。';
+    }
+    return '「' + scope + '」查無在世且有郵遞區號或住址的族親。請到「族譜」替收件人補上郵遞區號或住址後再開。';
+  }
+  // 有房被漏掉時的工具列提醒（渲染完成後顯示；列印時隱藏）
+  var NOTICES = [];
+  function noteZeroBranches(pick, what) {
+    if (pick.useFlag && pick.zero.length) {
+      NOTICES.push('注意：族譜裡已有人勾選「掃墓通知寄送對象」，所以只印勾選的人；' +
+        '以下房頭還沒有人勾選，這次' + what + '一份都沒有印：' + pick.zero.join('、') + '。');
+    }
+  }
+
+  /* ========================================================
+     doc=family&id=N：全家族表
+     資料來源：GET /api/member/{id}（本人＋spouses＋children 名單）
+              ＋GET /api/members（全員索引：ganzhi/era/lunar/phone/address/note）
+              ＋GET /api/member/{childId}（各子女的配偶名單）
+     版式：同 列印範本/族譜表.html 第二張（全家族表）——
+       欄：關係/家族姓名/性別/出生西元年/歲次/年號/農曆月日/備註（農曆年日期）
+       在世者下方緊接「住址：／電話：」跨欄子列；缺值「欠 載」.missing。
+     ======================================================== */
+  // lite：直系族譜表用——照原版 7 欄（沒有「歲次」）、不接住址／電話子列
+  function personRow(rel, m, fallbackName, lite) {
+    if (!m) {                                 // 僅有姓名（如查無主檔明細）→ 其餘欄以空/欠載呈現
+      return '<tr>' + td(esc(rel), 'c') + td(esc(fallbackName || '')) + td('', 'c') +
+        td(miss(), 'c') + (lite ? '' : td('', 'c')) + td('', 'c') + td(miss(), 'c') + '<td></td></tr>';
+    }
+    var note = [];
+    var dt = deathTxt(m);
+    // 匯入的備註常就是原版整格「1900/05月01日歿 示範墓園」：已含同一個卒日就不再前面重複一次
+    var flat = function (s) { return String(s || '').replace(/[\s　]+/g, ''); };
+    if (dt && flat(m.note).indexOf(flat(dt)) < 0) note.push(dt);
+    if (m.note) note.push(m.note);
+    var html = '<tr>' +
+      td(esc(rel), 'c') +
+      td(esc(m.name)) +
+      td(genderTxt(m.gender), 'c') +
+      td(m.birth ? esc(String(m.birth).slice(0, 4)) : miss(), 'c') +
+      (lite ? '' : td(esc(m.ganzhi || ''), 'c')) +
+      td(esc(m.era || ''), 'c') +
+      td(m.lunar ? esc(m.lunar) : miss(), 'c') +
+      '<td>' + esc(note.join('　')) + '</td></tr>';
+    if (m.alive && !lite) {                   // 在世者附住址／電話子列（跨欄，同原版式）
+      html += '<tr><td colspan="4">住址：' + esc(m.address || '') + '</td>' +
+              '<td colspan="4">電話：' + esc(m.phone || '') + '</td></tr>';
+    }
+    return html;
+  }
+
+  // 冠夫姓（2026-10-06 總幹事拍板）：嫁進來的女性配偶，1930 年以前出生的印「夫姓＋本名」（如「楊陳○○」），
+  // 之後出生的照本名。依據：原版直系族譜表與全家族表共 1171 筆嫁入者，這條分界吻合 91%
+  // （一律不冠只有 64%；轉換年代原版自己也不一致）。她的生年不詳時依序看先生的生年、兩人的卒年
+  // （1950 年以前過世算舊時代）；都沒有就不冠（真實庫 518 位嫁入者只有 10 位落到這裡）。
+  // 不用世代判斷：世代從第幾世起算各家不同。只改列印、不改資料；本名已經是夫姓開頭就不重複加。
+  // 全家族表與直系族譜表的配偶列共用。
+  var GUAN_BEFORE_YEAR = 1930, GUAN_DEATH_BEFORE = 1950;
+  function yearIn(s) {                        // 「1903-11-09」「11/09/1903」「1960/ 月 日歿」都取得到年份
+    var m = /(1[5-9]\d\d|20\d\d)/.exec(String(s || ''));
+    return m ? Number(m[1]) : null;
+  }
+  function guanName(name, w, husband) {
+    name = String(name || '');
+    var hs = String((husband && husband.name) || '').charAt(0);
+    if (!name || !hs || name.charAt(0) === hs) return name;
+    if ((w && w.gender === 'M') || (husband && husband.gender === 'F')) return name;   // 只冠在嫁進來的女性
+    w = w || {};
+    husband = husband || {};
+    var by = yearIn(w.birth) || yearIn(husband.birth);
+    var dy = yearIn(w.death) || yearIn(w.deathOriginal) || yearIn(husband.death) || yearIn(husband.deathOriginal);
+    var old = by ? by < GUAN_BEFORE_YEAR : (dy ? dy < GUAN_DEATH_BEFORE : false);
+    return old ? hs + name : name;
+  }
+  function spouseRow(rel, w, fallbackName, husband, lite) {
+    if (!w) return personRow(rel, null, guanName(fallbackName, null, husband), lite);
+    var o = {};
+    for (var k in w) o[k] = w[k];
+    o.name = guanName(w.name, w, husband);
+    return personRow(rel, o, fallbackName, lite);
+  }
+
+  // K-2 原版關係註記（2026-10-06，從家族原有的全家族表／直系族譜表補進庫）：子女在父親那張表上的原版稱呼
+  // （「三男」「長男(螟蛉子)」「三女(嗣胡)」「養女」）、配偶身分（續／側室／妾／招贅…）。有就照原版印，
+  // 沒有才照生日推排行、配偶只標妻／夫（他族新裝的庫一律沒有這些，行為不變）。
+  var ORDNUM = { '長': 1, '大': 1, '次': 2, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9,
+                 '十': 10, '十一': 11, '十二': 12 };
+  function labelRank(lab) {                   // 「三男」「長男(螟蛉子)」→ 3、1；養女、子 → 0
+    var m = /^(十一|十二|長|大|次|二|三|四|五|六|七|八|九|十)(男|女)/.exec(lab || '');
+    return m ? ORDNUM[m[1]] : 0;
+  }
+  // 母＋續 →「母(續)」；妾本身就是稱呼（兒子的妾＝「媳婦(妾)」）。
+  // asMother：直系族譜表的「母」列——原版那裡從不寫續弦（同一位在父親表上當媳婦才寫「二媳婦(續)」），
+  // 只標側室、妾、招贅（2026-10-06 對照 93 份原檔）
+  // 總幹事 2026-10-12：「族譜以前就這樣寫，那就按照前人的做法，我們不要自作主張」——照原版印，不要拿掉。
+  function withRole(base, role, asMother) {
+    if (!role || (asMother && /^(再|三)?續$/.test(role))) return base;
+    if (role === '妾') return /媳婦$/.test(base) ? '媳婦(妾)' : '妾';
+    return base + '(' + role + ')';
+  }
+  // 多位配偶的先後：元配 → 續 → 再續 → 側室 → 妾（同身分再看第一個子女的位置）；沒有子女的元配照樣排第一
+  var ROLE_RANK = { '': 0, '招贅': 0, '入贅': 0, '續': 1, '再續': 2, '三續': 3, '側室': 4, '妾': 5 };
+  function roleRank(r) { return ROLE_RANK[r || ''] != null ? ROLE_RANK[r || ''] : 3; }
+  function grandLabel(son, female, lab) {     // 內孫／內孫女（接女兒時外孫）＋原版註記；養女 → 養孫女
+    var base = String(lab || '').replace(/[（(].*?[)）]/g, '');
+    if (base === '養女' || base === '義女') return base.charAt(0) + '孫女';
+    var m = /[（(](.+?)[)）]/.exec(lab || '');
+    return (son ? '內孫' : '外孫') + (female ? '女' : '') + (m ? '(' + m[1] + ')' : '');
+  }
+
+  function renderFamily(id) {
+    var host, byId = {};
+    return api('/member/' + encodeURIComponent(id)).then(function (h) {
+      host = h;
+      return api('/members');
+    }).then(function (all) {
+      all = all || [];
+      for (var i = 0; i < all.length; i++) byId[all[i].id] = all[i];
+      var kids = host.children || [];
+      return Promise.all(kids.map(function (c) {
+        return api('/member/' + encodeURIComponent(c.id));
+      }));
+    }).then(function (kidDetails) {
+      var rows = '';
+      // 本人
+      rows += personRow('本人', byId[host.id] || host, host.name);
+      // 本人配偶（可多位；狀態不上表，僅列人）：依配偶本人性別標妻／夫。配偶性別空白（舊名冊常見）
+      // 或只有姓名時看家長性別推（家長男→妻、家長女→夫，同通知名單）；同性配偶標「配偶」
+      //（同子女配偶，總幹事 2026-07-10）；兩邊都不詳才用中性的「配偶」。
+      //（舊版 so.gender === 'F' ? '妻' : '夫'：配偶性別空白一律「夫」，男家長的太太也印成夫——第二批驗證員）
+      var sps = host.spouses || [], hg = (byId[host.id] || host).gender;
+      for (var s = 0; s < sps.length; s++) {
+        var so = sps[s].id != null ? byId[sps[s].id] : null;
+        var sg = (so && so.gender) || (hg === 'M' ? 'F' : (hg === 'F' ? 'M' : ''));
+        rows += spouseRow(withRole(sg === hg ? '配偶' : (sg === 'F' ? '妻' : (sg === 'M' ? '夫' : '配偶')), sps[s].role),
+                          so, sps[s].name, byId[host.id] || host);
+      }
+      // 子女（依出生序）＋各自配偶
+      // 長／次只有在「同性別手足排得出長幼」時才冠（後端 rankKnown：有人生日不詳、同年卻只填
+      // 年份、同一天都算排不出）：照位置硬給會把真正的老大印成「次男」——這種情況兒子一律印
+      // 「子」、女兒印「女」，留給總幹事手寫。兒女分開算（長女、次女只跟姊妹比）。
+      var kids = host.children || [], rankOK = { M: true, F: true };
+      for (var r0 = 0; r0 < kidDetails.length; r0++) {
+        var g0 = (byId[kidDetails[r0].id] || kidDetails[r0]).gender === 'F' ? 'F' : 'M';
+        if (kids[r0] && kids[r0].rankKnown === false) rankOK[g0] = false;
+      }
+      var nM = 0, nF = 0;
+      for (var c = 0; c < kidDetails.length; c++) {
+        var kd = kidDetails[c];
+        var km = byId[kd.id] || kd;
+        var rel, own = (kids[c] && kids[c].origLabel) || '', rk;
+        if (km.gender === 'F') { nF++; rel = rankOK.F ? (ORD[nF - 1] || ('第' + nF)) + '女' : '女'; rk = rankOK.F ? nF : 0; }
+        else { nM++; rel = rankOK.M ? (ORD[nM - 1] || ('第' + nM)) + '男' : '子'; rk = rankOK.M ? nM : 0; }
+        if (own) { rel = own; rk = labelRank(own); }      // 原版稱呼優先（K-2）
+        rows += personRow(rel, km, kd.name);
+        var ksp = kd.spouses || [];
+        for (var x = 0; x < ksp.length; x++) {
+          var kso = ksp[x].id != null ? byId[ksp[x].id] : null;
+          // 配偶稱謂依「配偶本人性別」對照子女性別：同性配偶統一標「配偶」
+          //（總幹事拍板 2026-07-10）；異性維持傳統媳婦／女婿。性別不明退回傳統。
+          var sg = kso ? kso.gender : null, spRel;
+          if (sg && sg === km.gender) spRel = '配偶';
+          else if (km.gender === 'F') spRel = (rk ? (SPO_ORD[rk - 1] || '') : '') + '女婿';
+          else spRel = (rk ? (SPO_ORD[rk - 1] || '') : '') + '媳婦';
+          rows += spouseRow(withRole(spRel, ksp[x].role), kso, ksp[x].name, km);
+        }
+      }
+      document.title = '全家族表-' + (host.name || '');
+      return '<div class="sheet">' +
+        '<div class="doc-title">第' + genCN(host.gen) + '世 ' + esc(host.name) + ' 全家族表</div>' +
+        '<table class="grid"><thead><tr>' +
+          '<th>關係</th><th>家族姓名</th><th>性別</th><th>出生西元年</th>' +
+          '<th>歲次</th><th>年號</th><th>農曆月日</th><th>備註（農曆年日期）</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>' +
+        foot('全家族表（在世者附住址／電話）') +
+      '</div>';
+    });
+  }
+
+  /* ========================================================
+     doc=lineage&id=N[&child=C]：直系族譜表（追一位子女一張；沒給 child＝每個兒子各一張）
+     版式：照原版「第N世某某直系族譜表」xls（列印範本/族譜表.html 第一張）——
+       欄：關係/家族姓名/性別/出生西元年/年號/農曆月日/備註（農曆年日期）：沒有歲次、不附住址電話；
+       列：父、母 → 其餘子女（出生序）→ 追的那位子女 → 他的配偶（「三媳婦」）→ 他的子女（內孫／內孫女）。
+       嫁入者冠夫姓見 guanName；原版稱呼與配偶身分見 labelRank／withRole／grandLabel（K-2）。
+       有兩位以上配偶、且子女連得到生母時，照原版分段列：母 → 她的子女 → 下一位母 → …
+       （生母不詳的子女接在第一段後面；追的那位一樣排最後）。
+     資料來源同全家族表：/member/{id}、/members、/member/{childId}。
+     ======================================================== */
+  function renderLineage(id, childId) {
+    var host, byId = {};
+    return api('/member/' + encodeURIComponent(id)).then(function (h) {
+      host = h;
+      return api('/members');
+    }).then(function (all) {
+      all = all || [];
+      for (var i = 0; i < all.length; i++) byId[all[i].id] = all[i];
+      return Promise.all((host.children || []).map(function (c) {
+        return api('/member/' + encodeURIComponent(c.id));
+      }));
+    }).then(function (kd) {
+      var kids = host.children || [], me = byId[host.id] || host, hg = me.gender;
+      var km = kd.map(function (k) { return byId[k.id] || k; });
+      // 子女排行同全家族表：同性別手足排得出長幼才冠長／次，否則印「子」「女」
+      var rankOK = { M: true, F: true }, num = [], rel = [], nM = 0, nF = 0, c;
+      for (c = 0; c < kd.length; c++) {
+        if (kids[c] && kids[c].rankKnown === false) rankOK[km[c].gender === 'F' ? 'F' : 'M'] = false;
+      }
+      for (c = 0; c < kd.length; c++) {
+        if (km[c].gender === 'F') { nF++; num[c] = rankOK.F ? nF : 0; rel[c] = num[c] ? (ORD[nF - 1] || ('第' + nF)) + '女' : '女'; }
+        else { nM++; num[c] = rankOK.M ? nM : 0; rel[c] = num[c] ? (ORD[nM - 1] || ('第' + nM)) + '男' : '子'; }
+        if (kids[c] && kids[c].origLabel) { rel[c] = kids[c].origLabel; num[c] = labelRank(rel[c]); }   // 原版稱呼優先
+      }
+      // 追哪幾位：指定 child 就只追他；否則每個兒子一張（原版一個兒子一份檔）；
+      // 沒有兒子就追有子女的女兒；都沒有就只印父母與子女一張
+      var pick = [];
+      for (c = 0; c < kd.length; c++) {
+        if (childId ? String(kd[c].id) === String(childId) : km[c].gender !== 'F') pick.push(c);
+      }
+      if (!childId && !pick.length) {
+        for (c = 0; c < kd.length; c++) if ((kd[c].children || []).length) pick.push(c);
+      }
+      if (!pick.length) pick.push(-1);
+
+      // 父、母（從子女的角度）：配偶性別空白時看本人性別推；同性配偶標「配偶」（同全家族表）
+      var hostRow = personRow(hg === 'F' ? '母' : '父', me, host.name, true);
+      var sps = host.spouses || [];
+      function spRow(s) {
+        var so = sps[s].id != null ? byId[sps[s].id] : null;
+        var sg = (so && so.gender) || (hg === 'M' ? 'F' : (hg === 'F' ? 'M' : ''));
+        return spouseRow(withRole(sg === hg ? '配偶' : (sg === 'M' ? '父' : '母'), sps[s].role, true), so, sps[s].name, me, true);
+      }
+      // 生母：子女的另一位家長、也是本人配偶的那位（後端 otherParent；K-2 補進庫的生母親子邊）
+      var spIdx = {}, mom = [];
+      for (var s0 = 0; s0 < sps.length; s0++) if (sps[s0].id != null) spIdx[sps[s0].id] = s0;
+      for (c = 0; c < kd.length; c++) {
+        var op = kids[c] && kids[c].otherParent;
+        mom[c] = op != null && spIdx[op] != null ? spIdx[op] : null;
+      }
+      var grouped = sps.length >= 2 && mom.some(function (v) { return v != null; });
+      // 分段順序：配偶依她第一個子女出現的位置排，沒有子女的排最後
+      var spOrder = sps.map(function (_, k) { return k; });
+      if (grouped) {
+        var firstKid = function (k) { var i = mom.indexOf(k); return i < 0 ? 9999 : i; };
+        spOrder.sort(function (a, b) {
+          return (roleRank(sps[a].role) - roleRank(sps[b].role)) || (firstKid(a) - firstKid(b)) || (a - b);
+        });
+      }
+      function bodyRows(t) {                    // 父 → 配偶與子女（追的那位 t 除外）
+        var out = hostRow, k, c3;
+        if (!grouped) {
+          for (k = 0; k < sps.length; k++) out += spRow(k);
+          for (c3 = 0; c3 < kd.length; c3++) if (c3 !== t) out += personRow(rel[c3], km[c3], kd[c3].name, true);
+          return out;
+        }
+        for (var o = 0; o < spOrder.length; o++) {
+          k = spOrder[o];
+          out += spRow(k);
+          for (c3 = 0; c3 < kd.length; c3++) {
+            if (c3 !== t && (mom[c3] === k || (o === 0 && mom[c3] == null))) out += personRow(rel[c3], km[c3], kd[c3].name, true);
+          }
+        }
+        return out;
+      }
+
+      document.title = '直系族譜表-' + (host.name || '');
+      return pick.map(function (t, i) {
+        var rows = bodyRows(t), label = '直系族譜表';
+        if (t >= 0) {
+          var son = km[t].gender !== 'F';
+          rows += personRow(rel[t], km[t], kd[t].name, true);
+          var ksp = kd[t].spouses || [], gk = kd[t].children || [];
+          var kspRow = function (x) {
+            var kso = ksp[x].id != null ? byId[ksp[x].id] : null;
+            var same = kso && kso.gender && kso.gender === km[t].gender;
+            return spouseRow(withRole(same ? '配偶' : (num[t] ? (SPO_ORD[num[t] - 1] || '') : '') + (son ? '媳婦' : '女婿'),
+                                      ksp[x].role), kso, ksp[x].name, km[t], true);
+          };
+          var gkRow = function (y) {
+            var gm = byId[gk[y].id] || null;
+            var gf = gm ? gm.gender === 'F' : /女$/.test(String(gk[y].origLabel || '').replace(/[（(].*?[)）]/g, ''));
+            return personRow(grandLabel(son, gf, gk[y].origLabel), gm, gk[y].name, true);
+          };
+          // 追的那位有兩位以上配偶、孫輩連得到生母時，同祖先那段照原版分段：媳婦 → 她的子女 → 下一位…
+          var kIdx = {}, gmom = [], x, y;
+          for (x = 0; x < ksp.length; x++) if (ksp[x].id != null) kIdx[ksp[x].id] = x;
+          for (y = 0; y < gk.length; y++) gmom[y] = gk[y].otherParent != null && kIdx[gk[y].otherParent] != null ? kIdx[gk[y].otherParent] : null;
+          if (ksp.length >= 2 && gmom.some(function (v) { return v != null; })) {
+            var kOrder = ksp.map(function (_, k) { return k; });
+            var firstG = function (k) { var i = gmom.indexOf(k); return i < 0 ? 9999 : i; };
+            kOrder.sort(function (a, b) {
+              return (roleRank(ksp[a].role) - roleRank(ksp[b].role)) || (firstG(a) - firstG(b)) || (a - b);
+            });
+            for (var o2 = 0; o2 < kOrder.length; o2++) {
+              rows += kspRow(kOrder[o2]);
+              for (y = 0; y < gk.length; y++) if (gmom[y] === kOrder[o2] || (o2 === 0 && gmom[y] == null)) rows += gkRow(y);
+            }
+          } else {
+            for (x = 0; x < ksp.length; x++) rows += kspRow(x);
+            for (y = 0; y < gk.length; y++) rows += gkRow(y);
+          }
+          label += '（' + rel[t] + ' ' + (km[t].name || kd[t].name || '') + ' 一支）';
+        }
+        return '<div class="sheet' + (i ? ' page-break' : '') + '">' +
+          '<div class="doc-title">第' + genCN(host.gen) + '世 ' + esc(host.name) + ' 直系族譜表</div>' +
+          '<table class="grid lineage"><thead><tr>' +
+            '<th>關係</th><th>家族姓名</th><th>性別</th><th>出生西元年</th>' +
+            '<th>年號</th><th>農曆月日</th><th>備註（農曆年日期）</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table>' +
+          foot(label) +
+        '</div>';
+      }).join('');
+    });
+  }
+
+  /* ========================================================
+     doc=tablet[&branch=X]：牌位姓名表（已歿者，依 房＋世代 排序）
+     資料來源：GET /api/members[?branch=]（alive=false 者）
+              ＋GET /api/settings（branches 陣列＝房頭排序依據）
+     版式：同 列印範本/牌位姓名表.html——原雙列國曆/農曆簡化為單列多欄，
+       欄名沿用：房別/世別/姓名/性別/歲次/西元/出生年月日/農曆年日期。
+       （出生年月日＝原始記載（年號＋農曆）；農曆年日期＝卒年「…歿」）
+     ======================================================== */
+  // 姓名字距：純中文 2~4 字加全形空格（同原版「楊 立 宗」）；含括號字號等原樣
+  function spacedName(nm) {
+    nm = String(nm || '');
+    if (/^[一-鿿]{2,4}$/.test(nm)) return nm.split('').join('　');
+    return nm;
+  }
+  // 國曆日期欄：完整日期；只有年份時照原版留空格「1777年 月 日」
+  function solarCell(iso) {
+    var full = fmtDate(iso);
+    if (full) return full;
+    var y = /^(\d{4})/.exec(iso || '');
+    return y ? y[1] + '年　月　日' : '';
+  }
+  // 農曆生日欄（兩列制下列）：年號年＋農曆月日（如「光緒27年臘月廿六」），
+  // 缺件退回原始記載；與國曆同值（只有西元年）時不重複印
+  function lunarBirthTxt(m) {
+    var t = (m.era || '') + (m.lunar || '');
+    if (!t) t = m.birthOriginal || '';
+    if (t && /^\d{4}$/.test(t) && t === String(m.birth || '').slice(0, 4)) return '';
+    return t;
+  }
+
+  function renderTablet(branch) {
+    return Promise.all([
+      api('/members', branch ? { branch: branch } : null),
+      api('/settings')
+    ]).then(function (rs) {
+      var list = (rs[0] || []).filter(function (m) { return !m.alive; });
+      var order = {}, bs = (rs[1] && rs[1].branches) || [];
+      for (var i = 0; i < bs.length; i++) order[bs[i]] = i;
+      // 房別空白或「本宗」＝分房前的共同祖先（始祖、早期世代）：排在所有房之前，
+      // 同原件（牌位姓名表.html 第 11、12 世房別留空排最前）。不能吃到「清單外＝999」排到最後。
+      var bkey = function (b) { b = b || ''; return b === '本宗' ? '' : b; };
+      var rank = function (b) {
+        b = bkey(b);
+        if (!b) return -1;
+        return order[b] !== undefined ? order[b] : 999;
+      };
+      list.sort(function (a, b) {              // 共同祖先 → 房（settings 順序）→ 世代 → id
+        var oa = rank(a.branch), ob = rank(b.branch);
+        if (oa !== ob) return oa - ob;
+        if (bkey(a.branch) !== bkey(b.branch)) return bkey(a.branch) < bkey(b.branch) ? -1 : 1;
+        if (a.gen !== b.gen) return a.gen - b.gen;
+        return a.id - b.id;
+      });
+      // 原版兩列制：上列＝房/世/姓名/性別/歲次/國曆生日/（出生年月日欄原版即留白）/卒日；
+      //             下列＝西元欄印農曆生日原文（年號紀年，如 光緒27年臘月廿六）
+      var rows = '';
+      for (var j = 0; j < list.length; j++) {
+        var m = list[j];
+        rows += '<tr>' +
+          td(esc(m.branch || ''), 'c') +
+          td('第' + esc(m.gen) + '世', 'c') +
+          td(esc(spacedName(m.name)) + (m.inlaw ? '（' + esc(m.inlaw) + '）' : '')) +
+          td(genderTxt(m.gender), 'c') +
+          td(m.ganzhi ? esc(m.ganzhi) : miss(), 'c') +
+          td(esc(solarCell(m.birth)), 'c') +
+          td('', 'c') +
+          '<td>' + esc(deathTxt(m)) + '</td></tr>';
+        rows += '<tr>' +
+          td('', 'c') + td('', 'c') + td('') + td('', 'c') + td('', 'c') +
+          td(esc(lunarBirthTxt(m)), 'c') +
+          td('', 'c') + '<td></td></tr>';
+      }
+      if (!rows) rows = '<tr><td colspan="8" class="c">（此範圍尚無已歿先人資料）</td></tr>';
+      document.title = '牌位姓名表' + (branch ? '-' + branch : '');
+      return '<div class="sheet">' +
+        '<h1 class="doc-title">歷代祖先牌位姓名資料</h1>' +
+        '<div class="doc-subtitle">' + esc(branch || '全部房頭') + '　·　已歿先人依房別與世代排序</div>' +
+        '<table class="grid"><thead><tr>' +
+          '<th>房　別</th><th>世別</th><th>姓&nbsp;&nbsp;名</th><th>性別</th>' +
+          '<th>歲次</th><th>西元</th><th>出生年月日</th><th>農曆年日期</th>' +
+        '</tr><tr>' +
+          '<th></th><th></th><th></th><th></th><th></th><th>農曆</th><th></th><th></th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>' +
+        foot('牌位姓名表') +
+      '</div>';
+    });
+  }
+
+  /* ========================================================
+     doc=tombgrid&site=<場地id|all>：穴排位圖（規格 §2.5 場地格線）
+     格子怎麼畫就怎麼印：th.gen＝列標籤（直書）、td＝格子稱呼（後端已套
+     「字號　姓公／名　姓氏」或手改文字）。site=all 時每個場地一頁，分頁隔開。
+     ======================================================== */
+  // i：第幾個場地（map 傳入）。第二個起由場地本身換頁（.page-break），不在場地之間
+  // 插空的分頁 div——空 div 會自己落在一張直式空白頁上（print-2）。
+  // ── 穴排位「面板」「階梯」版型（2026-10-12，照家族 2022 年面板圖、2002 年主牌位圖）──
+  // 副標（日期）可用「／」分行：原圖農曆、西元各一行
+  function tombLines(t) { return String(t || '').split(/\s*[／\n]\s*/).filter(Boolean).map(esc).join('<br>'); }
+  function tombGridMap(s) { var g = {}; (s.cells || []).forEach(function (c) { g[c.r + ',' + c.c] = c; }); return g; }
+  // 面板：幾塊紅框格子並排（各塊列數可不同，頂端對齊）；每格上方小字（世代）＋名字
+  function renderTombPanels(s, i) {
+    var o = s.layoutOpts || {}, pc = o.panelCols || 3, pr = o.panelRows || [s.rows], g = tombGridMap(s);
+    var panels = pr.map(function (rows, p) {
+      var t = '';
+      for (var r = 0; r < rows; r++) {
+        t += '<tr>';
+        for (var k = 0; k < pc; k++) {
+          var cell = g[r + ',' + (p * pc + k)];
+          t += '<td>' + (cell && cell.top ? '<div class="tp-top">' + esc(cell.top) + '</div>' : '') +
+               '<div class="tp-nm">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
+        }
+        t += '</tr>';
+      }
+      return '<div class="tp-panel"><table class="tp-grid"><tbody>' + t + '</tbody></table></div>';
+    }).join('');
+    return '<div class="sheet landscape tomb-panels' + (i ? ' page-break' : '') + '">' +
+      '<div class="doc-title">' + esc(s.title || s.name || '穴排位圖') + '</div>' +
+      '<div class="tp-wrap">' + panels + '</div>' +
+      '<div class="tp-foot"><div>' + esc(s.footer || '') + '</div><div class="tp-date">' + tombLines(s.subtitle) + '</div></div>' +
+      foot('穴排位圖・' + (s.name || '')) +
+    '</div>';
+  }
+  // 階梯：一層一層往下加寬、置中；由右往左讀（c=0 在最右），每格直書；
+  // 同一層相鄰格子的上方小字相同就合成一條世代橫條，橫條字也由右往左排（原圖「世 三 十」＝十三世）
+  function bandTh(label, span) {                // 只有一格寬：原圖是小字擠一行（「世九十」）
+    return '<th colspan="' + span + '"' + (span === 1 ? ' class="n1"' : '') + '>' +
+           esc(chars(label).reverse().join(span === 1 ? '' : '　')) + '</th>';
+  }
+  function renderTombSteps(s, i) {
+    var w = (s.layoutOpts || {}).rowWidths || [], g = tombGridMap(s);
+    var steps = w.map(function (n, r) {
+      var band = '', cells = '', run = null, span = 0, anyTop = false;
+      for (var c = n - 1; c >= 0; c--) {           // 畫面由左到右＝c 由大到小
+        var cell = g[r + ',' + c], top = (cell && cell.top) || '';
+        if (top) anyTop = true;
+        if (run !== null && top !== run) { band += bandTh(run, span); span = 0; }
+        run = top; span++;
+        cells += '<td><div class="ts-v">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
+      }
+      if (span) band += bandTh(run, span);
+      return '<div class="ts-step"><table class="ts-grid"><tbody>' + (anyTop ? '<tr>' + band + '</tr>' : '') +
+             '<tr>' + cells + '</tr></tbody></table></div>';
+    }).join('');
+    return '<div class="sheet landscape tomb-steps' + (i ? ' page-break' : '') + '">' +
+      '<div class="doc-title">' + esc(s.title || s.name || '穴排位圖') + '</div>' +
+      '<div class="ts-head"><div class="ts-addr">' + esc(s.footer || '') + '</div><div class="ts-date">' + tombLines(s.subtitle) + '</div></div>' +
+      '<div class="ts-body">' + steps + '</div>' +
+      foot('穴排位圖・' + (s.name || '')) +
+    '</div>';
+  }
+  function renderTombGridOne(s, i) {
+    if (s.layout === 'panels') return renderTombPanels(s, i);
+    if (s.layout === 'steps') return renderTombSteps(s, i);
+    var grid = {};
+    for (var k = 0; k < (s.cells || []).length; k++) grid[s.cells[k].r + ',' + s.cells[k].c] = s.cells[k];
+    var rows = '';
+    for (var r = 0; r < s.rows; r++) {
+      rows += '<tr><th class="gen">' + esc((s.rowLabels || [])[r] || '') + '</th>';
+      for (var c = 0; c < s.cols; c++) {
+        var cell = grid[r + ',' + c];
+        rows += '<td>' + (cell ? esc(cell.label) : '') + '</td>';
+      }
+      rows += '</tr>';
+    }
+    return '<div class="sheet landscape' + (i ? ' page-break' : '') + '">' +
+      '<div class="doc-title">' + esc(s.title || s.name || '穴排位圖') + '</div>' +
+      (s.subtitle ? '<div class="doc-subtitle">' + esc(s.subtitle) + '</div>' : '') +
+      '<table class="tomb"><tbody>' + rows + '</tbody></table>' +
+      (s.footer ? '<div class="foot">' + esc(s.footer) + '</div>' : '') +
+      foot('穴排位圖・' + (s.name || '')) +
+    '</div>';
+  }
+  function renderTombGrid(siteId) {
+    if (String(siteId) === 'all') {
+      return api('/tomb-sites').then(function (list) {
+        if (!list || !list.length) throw new Error('尚未建立任何穴排位場地，請先到「穴排位」頁畫格子。');
+        return Promise.all(list.map(function (s) { return api('/tomb-site/' + encodeURIComponent(s.id)); }));
+      }).then(function (sites) {
+        document.title = '穴排位圖-全部場地';
+        return sites.map(renderTombGridOne).join('');
+      });
+    }
+    return api('/tomb-site/' + encodeURIComponent(siteId)).then(function (s) {
+      document.title = '穴排位圖-' + (s.name || '');
+      return renderTombGridOne(s, 0);
+    });
+  }
+
+  /* ========================================================
+     doc=roster&id=<家長id>：掃墓祭祖通知名單（一支一份，同傳統分檔
+     「第13世大房、長敏.xls」格式，總幹事拍板 2026-07-04）
+     上段＝該支先人（家長＋配偶，每人兩列：國曆生卒／農曆生日原文）
+     下段＝該支在世子孫聯絡名冊（每人兩列：世別/姓名/性別/郵遞/電話
+           ＋ 關係/住址），尾附空白列供現場補登。
+     ======================================================== */
+  function renderRoster(headId) {
+    return Promise.all([
+      api('/member/' + encodeURIComponent(headId)),
+      api('/members')
+    ]).then(function (rs) {
+      var head = rs[0] || {}, all = rs[1] || [];
+      var byId = {};
+      for (var i = 0; i < all.length; i++) byId[all[i].id] = all[i];
+
+      // 該支後裔：自家長沿 fatherId 向下收集，含各代配偶（spouseOfId 指向支內者）
+      var inSet = {}; inSet[head.id] = true;
+      var kidsOf = {};
+      for (var k = 0; k < all.length; k++) {
+        var f = all[k].fatherId;
+        if (f != null) (kidsOf[f] = kidsOf[f] || []).push(all[k]);
+      }
+      var queue = [head.id];
+      while (queue.length) {
+        var pid = queue.pop();
+        var kids = kidsOf[pid] || [];
+        for (var c = 0; c < kids.length; c++) {
+          if (!inSet[kids[c].id]) { inSet[kids[c].id] = true; queue.push(kids[c].id); }
+        }
+      }
+      for (var s = 0; s < all.length; s++) {
+        var sp = all[s];
+        if (!inSet[sp.id] && sp.spouseOfId != null && inSet[sp.spouseOfId]) inSet[sp.id] = true;
+      }
+
+      // 上段：先人＝家長本人＋其配偶（每人兩列）
+      function ancRows(m, relLabel) {
+        if (!m) return '';
+        return '<tr>' +
+          td(esc(m.branch || ''), 'c') +
+          td(esc(spacedName(m.name)), 'c') +
+          td(genderTxt(m.gender), 'c') +
+          td(m.ganzhi ? esc(m.ganzhi) : '', 'c') +
+          td(esc(solarCell(m.birth)), 'c') +
+          td('', 'c') +
+          '<td>' + esc(deathTxt(m)) + '</td></tr>' +
+          '<tr>' + td(esc(relLabel || ''), 'c') + td('', 'c') + td('', 'c') + td('', 'c') +
+          td(esc(lunarBirthTxt(m)), 'c') + td('', 'c') + '<td></td></tr>';
+      }
+      var rows = ancRows(head, '第' + (head.gen || '') + '世');
+      var sps = head.spouses || [];
+      var spJobs = sps.map(function (s2) {
+        return s2.id ? api('/member/' + s2.id).catch(function () { return null; }) : Promise.resolve(null);
+      });
+      return Promise.all(spJobs).then(function (spDetails) {
+        for (var w = 0; w < spDetails.length; w++) {
+          // 依配偶本人性別標：女性家長的配偶是「丈夫」（舊版一律寫死「妻子」）；同性配偶標「配偶」
+          //（同全家族表，總幹事 2026-07-10）。配偶性別空白（舊名冊常見）看家長性別推；
+          // 兩邊都空白退回傳統的「妻子」
+          var sd = spDetails[w];
+          if (!sd) continue;
+          var sg = sd.gender || (head.gender === 'F' ? 'M' : '');
+          rows += ancRows(sd, (sg && sg === head.gender) ? '配偶' : (sg === 'M' ? '丈夫' : '妻子'));
+        }
+
+        // 下段：在世子孫（每人兩列：世別/姓名/性別/郵遞/電話 ＋ 關係/住址）
+        rows += '<tr><th>關　係</th><th>姓　名</th><th>性別</th><th>郵遞區號</th>' +
+          '<th colspan="3">聯　絡　電　話</th></tr>';
+        var live = [];
+        for (var idKey in inSet) {
+          var mm = byId[idKey];
+          if (mm && mm.alive) live.push(mm);
+        }
+        live.sort(function (a, b) { return (a.gen - b.gen) || (a.id - b.id); });
+        for (var j = 0; j < live.length; j++) {
+          var v = live[j];
+          var zip = v.postalCode || '';
+          var addr = v.address || '';
+          var zm = /^(\d{3,6})\s*/.exec(addr);
+          if (zm) { if (!zip) zip = zm[1]; addr = addr.slice(zm[0].length); }
+          rows += '<tr>' +
+            td('第' + esc(v.gen) + '世', 'c') +
+            td(esc(spacedName(v.name)), 'c') +
+            td(genderTxt(v.gender), 'c') +
+            td(esc(zip), 'c') +
+            '<td colspan="3">聯絡電話：' + esc(v.phone || '') + '</td></tr>';
+          rows += '<tr>' +
+            td(v.inlaw ? esc(v.inlaw) : '', 'c') +   // 關係：外姻標媳／女婿，本宗留空供手填
+            td('', 'c') + td('', 'c') +
+            '<td colspan="4">住址：' + esc(addr) + '</td></tr>';
+        }
+        if (!live.length) rows += '<tr><td colspan="7" class="c">（此支尚無在世子孫資料）</td></tr>';
+        // 空白列組：供現場補登（沿原版保留）
+        for (var b = 0; b < 4; b++) {
+          rows += '<tr><td class="c">&nbsp;</td><td class="c">&nbsp;</td><td class="c">&nbsp;</td>' +
+            '<td class="c">&nbsp;</td><td colspan="3">聯絡電話：</td></tr>' +
+            '<tr><td class="c">&nbsp;</td><td class="c">&nbsp;</td><td class="c">&nbsp;</td>' +
+            '<td colspan="4">住址：</td></tr>';
+        }
+        document.title = '通知名單-' + (head.name || '');
+        return '<div class="sheet">' +
+          '<div class="doc-title">掃墓祭祖通知名單</div>' +
+          '<div class="doc-subtitle">' + esc(head.name || '') + '　派下</div>' +
+          '<table class="grid">' +
+            '<colgroup><col style="width:11%"><col style="width:20%"><col style="width:8%">' +
+            '<col style="width:12%"><col style="width:19%"><col style="width:10%"><col style="width:20%"></colgroup>' +
+            '<thead><tr>' +                   // 首欄用中性「房　別」（同牌位表）：各家族房數不一，也可能不分房
+              '<th>房　別</th><th>姓　名</th><th>性別</th><th>歲次</th><th>西元</th>' +
+              '<th>出生年月日</th><th>農曆年日期</th>' +
+            '</tr><tr>' +
+              '<th></th><th></th><th></th><th></th><th>農曆</th><th></th><th></th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table>' +
+          foot('掃墓祭祖通知名單') +
+        '</div>';
+      });
+    });
+  }
+
+  /* ========================================================
+     doc=letter&event=N：掃墓祭祖通函（公文式，依總幹事確認格式）
+     資料來源：GET /api/events（依 event 找活動：name/date/calendar/
+              location/note/letterBody/deceasedId）
+              ＋GET /api/settings（org_* 8 鍵：抬頭與聯絡欄）
+              ＋GET /api/member/{deceasedId}（受文者稱謂，可缺）
+     版式：沿用 列印範本/通知函.html —— .letterhead（寄件抬頭：協會名＋
+       聯絡處＋印刷品）→ .doc-title「{民國年}年{受文者}掃墓祭祖通函」→
+       右側 會址/聯絡地址/理事長＋電話/總幹事＋電話（空欄整列省略）→
+       .gov-meta（受文者/發文日期=今日民國年/速別/密等/附件）→
+       .gov-body（主旨=活動名＋日期；說明：letterBody 逐行編號條列，
+       無則由 時間/地點/備註 自動組條）。
+     全部文件渲染後由 enableEditing() 統一開放點字修改。
+     ======================================================== */
+  function rocDate(iso) {                     // '2026-04-11' → '115年04月11日'
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+    return m ? ((+m[1] - 1911) + '年' + m[2] + '月' + m[3] + '日') : (iso || '');
+  }
+  function todayRoc() {
+    var d = new Date();
+    var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+    return (d.getFullYear() - 1911) + '年' + p2(d.getMonth() + 1) + '月' + p2(d.getDate()) + '日';
+  }
+  function printMark() {                      // 郵件「印刷品」戳記（框線小字）
+    return '<span style="border:1px solid #555;padding:0 4pt;font-size:9pt">印刷品</span>';
+  }
+
+  /* 活動日期文字（公文主旨與說明用）。
+     **農曆活動不可對 target_date 套 rocDate**——那會把農曆年當成西元年減 1911，
+     印出「農曆115年04月05日」這種不存在的混合格式：既不是農曆的寫法（農曆不用民國紀年），
+     也不是那天的國曆日期，收件長輩根本不知道哪天要到。
+     農曆一律印「農曆〔中文月日〕（國曆 民國年月日）」，兩種曆都寫清楚。
+     國曆值用 list_events 已經換算好的 solarDate（R3），不在前端重算。
+     換算不出來時（無效農曆日／超出查表範圍）只印農曆原文，不硬掰一個國曆日。 */
+  function eventDateText(ev) {
+    ev = ev || {};
+    if (ev.calendar !== 'LUNAR') return rocDate(ev.solarDate || ev.date);
+    var lunarTxt = ev.lunarDate || ev.date || '';
+    var solarTxt = rocDate(ev.solarDate || '');
+    return '農曆' + lunarTxt + (solarTxt ? '（國曆' + solarTxt + '）' : '');
+  }
+
+  function renderLetter(eventId) {
+    return Promise.all([api('/events'), api('/settings')]).then(function (rs) {
+      var evs = rs[0] || [], st = rs[1] || {};
+      var ev = null;
+      for (var i = 0; i < evs.length; i++) {
+        if (String(evs[i].id) === String(eventId)) { ev = evs[i]; break; }
+      }
+      if (!ev) throw new Error('查無此祭祖活動（event=' + eventId + '），請回列印頁重新選擇。');
+      // 存檔擋小月三十之前就存進庫的活動：list_events 帶 problem、solarDate 是空的——國曆印不出來，
+      // 抬頭年份退回農曆年（臘月活動會少一年）。祭祖頁活動卡有提醒，列印頁也要講（工具列紅字，不印到紙上）
+      if (ev.problem) {
+        NOTICES.push('這場活動的農曆日期有問題：' + ev.problem +
+          '通函上的日期與抬頭年份都可能印錯，請先回「祭祖」頁按這場活動的「編輯」改好日期再列印。');
+      }
+      // 受文者：合祭（無 deceasedId）＝全體族親；有則以先人名諱＋後裔族親
+      var who = ev.deceasedId != null
+        ? api('/member/' + encodeURIComponent(ev.deceasedId)).catch(function () { return null; })
+        : Promise.resolve(null);
+      return who.then(function (dec) { return buildLetter(ev, st, dec); });
+    });
+  }
+
+  function buildLetter(ev, st, dec) {
+    var S = function (k) { return (st[k] == null ? '' : String(st[k])).replace(/^\s+|\s+$/g, ''); };
+    var dTxt = eventDateText(ev);
+    // 通函抬頭的年份要取「活動實際發生的國曆年」：農曆冬月／臘月會跨到次年
+    // （農曆 2025 臘月廿六＝國曆 2026-02-13），取農曆年會差一年。
+    var ym = /^(\d{4})/.exec(ev.solarDate || ev.date || '');
+    var rocYear = ym ? (+ym[1] - 1911) : (new Date().getFullYear() - 1911);
+    var recipient = dec && dec.name ? (dec.name + '後裔族親') : '全體族親';
+
+    // (1) 寄件抬頭：協會名＋聯絡處＋印刷品（空欄優雅省略）
+    var head = '';
+    if (S('org_name')) head += '<div class="org">' + esc(S('org_name')) + '</div>';
+    head += '<div class="contact">' +
+      (S('org_contact_addr') ? '聯絡處：' + esc(S('org_contact_addr')) + '　' : '') +
+      printMark() + '</div>';
+
+    // (2) 標題右側：會址／聯絡地址／理事長＋電話／總幹事＋電話（空欄整列省略）
+    var side = [];
+    if (S('org_address')) side.push('會址：' + esc(S('org_address')));
+    if (S('org_contact_addr')) side.push('聯絡地址：' + esc(S('org_contact_addr')));
+    if (S('org_chair')) side.push('理事長　' + esc(S('org_chair')) + (S('org_chair_phone') ? '　' + esc(S('org_chair_phone')) : ''));
+    if (S('org_officer')) side.push('總幹事　' + esc(S('org_officer')) + (S('org_officer_phone') ? '　' + esc(S('org_officer_phone')) : ''));
+    var sideHtml = side.length
+      ? '<div class="gov-meta" style="text-align:right;line-height:1.7">' + side.join('<br>') + '</div>'
+      : '';
+
+    // (3) 說明條列：公文式「一、二、三」編號（同傳統通知單）。
+    //     letterBody 一行一條；行首有空格、或整行以「1.」「1、」開頭＝子項
+    //     （縮排、不佔編號——如餐會時間/費用、服務台 1.2.3.4）。
+    var body = (ev.letterBody || '').replace(/\r\n?/g, '\n');
+    var srcLines;
+    if (body.replace(/\s/g, '')) {
+      srcLines = body.split('\n');
+    } else {
+      srcLines = ['時　間：' + dTxt + (ev.time ? '　' + ev.time : '') + '。',
+                  '地　點：' + (ev.location || '（地點另行通知）') + '。'];
+      if (ev.note) srcLines.push(ev.note);
+    }
+    var CNN = ['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五'];
+    var lis = '', ni = 0;
+    for (var i = 0; i < srcLines.length; i++) {
+      var raw = String(srcLines[i]).replace(/\s+$/, '');
+      var txt = raw.replace(/^[\s　]+/, '');
+      if (!txt) continue;
+      var isSub = /^[\s　]/.test(raw) || /^\d+[.、]/.test(txt);
+      if (isSub) {
+        lis += '<div style="padding-left:2.6em;margin-bottom:2pt">' + esc(txt) + '</div>';
+      } else {
+        lis += '<div style="margin-bottom:4pt;text-indent:-2.6em;padding-left:2.6em">' +
+          esc((CNN[ni] || String(ni + 1)) + '、') + esc(txt) + '</div>';
+        ni++;
+      }
+    }
+
+    document.title = '掃墓通函-' + (ev.name || '');
+
+    return '<div class="sheet">' +
+      '<div class="letterhead">' + head + '</div>' +
+      '<div class="doc-title">' + rocYear + '年' + esc(recipient) + '掃墓祭祖通函</div>' +
+      sideHtml +
+      '<div class="gov-meta">' +
+        '<div class="row"><span class="label">受文者：</span><span>' + esc(recipient) + '</span></div>' +
+        '<div class="row"><span class="label">發文日期：</span><span>' + esc(todayRoc()) + '</span></div>' +
+        '<div class="row"><span class="label">速別：</span><span>普通</span></div>' +
+        '<div class="row"><span class="label">密等及解密條件：</span><span>　</span></div>' +
+        '<div class="row"><span class="label">附件：</span><span>無</span></div>' +
+      '</div>' +
+      '<div class="gov-body" contenteditable="true">' +
+        '<div class="subject">主旨：本會訂於' + esc(dTxt) + '舉行「' + esc(ev.name || '') + '」，敬請族親踴躍參加，如說明。</div>' +
+        '<div>說明：</div><div>' + lis + '</div>' +
+      '</div>' +
+      foot('掃墓祭祖通函') +
+    '</div>';
+  }
+
+  /* ========================================================
+     doc=labels[&branch=X]：信封片頭（每收件人一區塊，A4 直向多塊）
+     資料來源：GET /api/members[?branch=]（在世且 postalCode 或 address
+              非空者）＋GET /api/settings（org_name/org_contact_addr、
+              branches＝房頭排序依據）
+     版式：沿用 列印範本/寄信封面標籤.html 的 .label/.sender/.print-mark/
+       .recipient/.zip/.addr/.name/.salut，改為單欄直向堆疊。
+       每區塊：協會名＋聯絡處＋印刷品｜收件人 zip（postalCode，無則自
+       address 開頭數字自動拆）＋地址（拆掉開頭 zip）＋「姓　名　君（N）」。
+       流水號 N 依 房（settings 順序）→世代→id 排序；渲染後實量高度分頁
+       （paginateLabels，一頁約 4～5 塊，一塊不跨頁）。
+     ======================================================== */
+  // 支系標註（原版片頭右上角）：房＋世代＋支祖（沿 fatherId 上溯；
+  // 外姻無父者借配偶的支系）。例：「三房18世・14世祖 楊敬泉(澤民)」
+  //
+  // 支祖世代 tagGen＝settings.gen_base + 3（例：起算第 11 世 → 14，對應紙本歸檔的
+  // 「第14世 × 房」分檔與穴排位圖第 14 世格線）。原本寫死 14，他族起算世代不同
+  // 就永遠標不出支祖——改成由起算世代平移。實測原資料改前改後輸出完全相同。
+  // 這是發起家族的退件歸檔慣例，不是每個家族都用：gen_base 須在「設定 → 協會資料 →
+  // 信封支系標註起算世代」明確填了才印；留空（預設）整個支系標註都不印。
+  // 註：app.js 的 dgFoldGen 也是「最小世代+3」，但那是顯示啟發式，這裡是退件歸檔
+  //     慣例，只是數值恰好相同，兩者不共用。
+  function lineageTag(m, byId, tagGen) {
+    var cur = m, seen = {};
+    if (cur && cur.fatherId == null && cur.spouseOfId != null) cur = byId[cur.spouseOfId] || cur;
+    var anc = null;
+    while (cur && !seen[cur.id]) {          // seen 防髒資料成環（原為 guard<30 計數）
+      seen[cur.id] = 1;
+      if (cur.gen === tagGen) { anc = cur; break; }
+      cur = (cur.fatherId != null) ? byId[cur.fatherId] : null;
+    }
+    var bits = [];
+    if (m.branch) bits.push(m.branch + (m.gen ? m.gen + '世' : ''));
+    else if (m.gen) bits.push(m.gen + '世');
+    // anc.id !== m.id：淺樹（如示範庫只有 3 世）時門檻可能落在自己身上，別印成自己是自己的支祖
+    // 世代用中文數字（原件就寫「十四世祖」，格式照抄原件不自創）
+    if (anc && anc.id !== m.id) bits.push(cnNum(anc.gen) + '世祖 ' + anc.name);
+    return bits.join('・');
+  }
+
+  // 阿拉伯數字 → 中文數字（1..99，族譜世代夠用）：14→十四、20→二十、21→二十一
+  function cnNum(n) {
+    n = Number(n) || 0;
+    if (n <= 0 || n > 99) return String(n);
+    var D = ['', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    if (n < 10) return D[n];
+    var t = Math.floor(n / 10), o = n % 10;
+    return (t === 1 ? '十' : D[t] + '十') + D[o];
+  }
+
+  // 支祖世代：起算世代（settings.gen_base）+3。gen_base 只由設定頁寫入（匯入不會帶）；
+  // 未設定／非正數回 0＝不印支系標註
+  function lineageTagGen(st) {
+    var b = Number(st && st.gen_base);
+    return b > 0 ? b + 3 : 0;
+  }
+
+  function renderLabels(branch) {
+    return Promise.all([
+      api('/members'),                        // 全量：byId 供支系上溯（過濾在下方做）
+      api('/settings')
+    ]).then(function (rs) {
+      var all = rs[0] || [], st = rs[1] || {};
+      var byId = {};
+      for (var bi = 0; bi < all.length; bi++) byId[all[bi].id] = all[bi];
+      var order = {}, bs = st.branches || [];
+      for (var i = 0; i < bs.length; i++) order[bs[i]] = i;
+      // 寄送對象（戶長／代表制）：同 renderMailMerge——有標記只寄標記者
+      var pick = pickRecipients(all, branch, order), useFlag = pick.useFlag, list = pick.list;
+      list.sort(function (a, b) {              // 房（settings 順序）→ 世代 → id
+        var oa = order[a.branch] !== undefined ? order[a.branch] : 999;
+        var ob = order[b.branch] !== undefined ? order[b.branch] : 999;
+        if (oa !== ob) return oa - ob;
+        if ((a.branch || '') !== (b.branch || '')) return (a.branch || '') < (b.branch || '') ? -1 : 1;
+        if (a.gen !== b.gen) return a.gen - b.gen;
+        return a.id - b.id;
+      });
+      // 大量列印守門：實測一頁放 4～5 塊（地址折行、有支系標註時 4 塊），以 0.25 頁/人估算
+      //（舊版寫每頁 8 塊、以 0.125 估，頁數少估一半）
+      if (!confirmBulk(list.length, useFlag, 0.25, '信封片頭')) {
+        throw new Error('已取消列印。可到「族譜」逐位成員勾選「掃墓通知寄送對象」（戶長／代表）後再印。');
+      }
+
+      var orgName = (st.org_name || '').replace(/^\s+|\s+$/g, '');
+      var orgAddr = (st.org_contact_addr || '').replace(/^\s+|\s+$/g, '');
+      var sender = '<div class="sender">' + printMark() +
+        (orgName ? esc(orgName) : '') +
+        (orgAddr ? '　聯絡處：' + esc(orgAddr) : '') + '</div>';
+
+      var blocks = [], tagGen = lineageTagGen(st);   // 0＝未設定起算世代，不印支系標註
+      for (var j = 0; j < list.length; j++) {
+        var m = list[j];
+        var zip = m.postalCode || '', addr = m.address || '';
+        var zm = /^(\d{3,6})\s*/.exec(addr);   // 地址開頭數字＝郵遞區號：拆出
+        if (zm) { if (!zip) zip = zm[1]; addr = addr.slice(zm[0].length); }
+        var spaced = chars(m.name).join('　');   // 按字切（罕用字不拆成兩個「�」）
+        // 稱呼沿傳統原件（掃墓寄信片頭）：女士／先生＋兩位數流水號
+        var salut = (m.gender === 'F' ? '女士' : '先生') +
+          '（' + (j + 1 < 10 ? '0' : '') + (j + 1) + '）';
+        var ltag = tagGen ? lineageTag(m, byId, tagGen) : '';   // 原版右上角支系標註（退件歸檔用）
+        blocks.push(
+          '<div class="label" style="height:auto;min-height:0;margin-bottom:8pt">' +
+            sender +
+            (ltag ? '<div style="text-align:right;font-size:8.5pt;color:#777">' + esc(ltag) + '</div>' : '') +
+            '<div class="recipient" style="margin-top:6pt">' +
+              '<div class="zip">' + (zip ? esc(zip) : '&nbsp;') + '</div>' +
+              '<div class="addr">' + esc(addr) + '</div>' +
+              '<div class="name">' + esc(spaced) +
+                '<span class="salut">　' + salut + '</span></div>' +
+            '</div>' +
+          '</div>');
+      }
+
+      document.title = '信封片頭' + (branch ? '-' + branch : '');
+      if (!blocks.length) {
+        return '<div class="sheet">' +
+          '<div class="doc-title">信封片頭</div>' +
+          '<div class="doc-subtitle">' + esc(noRecipientMsg(pick, branch || '全部房頭', '信封片頭')) +
+          '</div>' + foot('信封片頭') + '</div>';
+      }
+      noteZeroBranches(pick, '信封片頭');
+      // 先全部放進一張「待分頁」的紙，渲染後由 paginateLabels() 實量高度分頁
+      //（不能固定每頁 N 塊：每塊高度隨地址折行、支系標註而變，舊版寫死 8 塊，實際只放得下 5 塊）
+      return '<div class="sheet label-pool">' + blocks.join('') +
+        foot('信封片頭（' + (branch || '全部房頭') + '，共 ' + blocks.length + ' 位）') +
+      '</div>';
+    });
+  }
+
+  /* 信封片頭分頁：實量每塊高度裝箱，一頁放到滿為止，一塊不跨頁（.label 另有
+     break-inside: avoid 兜底）。量法同 fitOnePage：螢幕上 .sheet 內寬＝列印版心寬
+     （21−2×1.8＝17.4cm），折行相同；版心高 26.1cm 扣 FIT_SLACK_CM 吸收排版細微差。 */
+  function outerPx(el) {
+    if (!el) return 0;
+    var cs = getComputedStyle(el);
+    return el.getBoundingClientRect().height + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+  }
+  function paginateLabels() {
+    var pool = root.querySelector('.label-pool');
+    if (!pool) return;
+    var blocks = pool.querySelectorAll('.label'), ft = pool.querySelector('.foot');
+    var limit = cmToPx(PAGE_H_CM - FIT_SLACK_CM) - outerPx(ft);
+    var pages = [], cur = [], used = 0;
+    for (var i = 0; i < blocks.length; i++) {
+      var h = outerPx(blocks[i]);
+      if (cur.length && used + h > limit) { pages.push(cur); cur = []; used = 0; }
+      cur.push(blocks[i].outerHTML);
+      used += h;
+    }
+    if (cur.length) pages.push(cur);
+    var fh = ft ? ft.outerHTML : '';
+    root.innerHTML = pages.map(function (p, n) {
+      return '<div class="sheet' + (n ? ' page-break' : '') + '">' + p.join('') + fh + '</div>';
+    }).join('');
+  }
+
+  /* ========================================================
+     doc=meeting：開會通知（會員大會公文，無參數）
+     資料來源：GET /api/settings（org_* 8 鍵：抬頭、立案字號與聯絡欄）
+     版式：同掃墓通函（print.css 的 .letterhead/.gov-meta）——
+       .letterhead（協會名＋聯絡處＋立案字號＋印刷品）→
+       .doc-title「開會通知單」→ 右側 會址/聯絡地址/理事長＋電話/總幹事＋電話 →
+       .gov-meta（受文者＝全體會員／發文日期＝今日民國年／發文字號＝留空）→
+       .gov-meta（開會事由/開會時間/開會地點/主持人/出席者/列席者/副本/附註，
+       未儲存過時預填家族中性佔位文字「○」）。
+     各欄（發文日期除外）可在「僅內容」點字修改後按「儲存開會內容」存進
+     settings.meeting_notice（JSON：{欄位名: 文字}），合併寄送從同一份資料帶入（print-3）。
+     存在 settings 的理由：合併寄送要讀得到同一份內容，settings 是列印頁讀得到、又會跟著
+     資料庫一起備份／還原的地方；鍵值表不用改 schema，寫入沿用 POST /api/settings（與協會
+     資料一樣要先解鎖編輯）。不用 localStorage：列印頁開在系統瀏覽器，埠號每次啟動都不同，
+     存了下次也讀不到，換電腦更是全丟。
+     ======================================================== */
+  // [欄位名, 未儲存時的預設文字]；發文日期一律印當天（不存，免得明年還印今年的日期）
+  // MEETING_DEF：本次畫面用的預設文字（renderMeeting 填）。儲存時跟預設一樣的欄位不存，
+  // 例如主持人「理事長　某某」沒改過就繼續跟著「設定」的理事長走，改選後不會印成前任
+  var MEETING_DEF = {};
+  function meetingDefaults(chair) {
+    return [
+      ['受文者', '全體會員'],
+      ['發文字號', ''],
+      ['開會事由', '召開第○屆第○次會員大會'],
+      ['開會時間', '中華民國○○○年○月○日（星期○）上午○時○分'],
+      ['開會地點', '○○○○○○（會場名稱及地址）'],
+      ['主持人', '理事長　' + chair],
+      ['出席者', '全體會員'],
+      ['列席者', '本會顧問及受邀貴賓'],
+      ['副本', '本會理事會、監事會（存查）'],
+      ['附註', '一、請攜帶本開會通知單準時報到。\n二、不克出席者，得依章程出具委託書委託其他會員代理出席。']
+    ];
+  }
+  function parseMeetingSaved(v) {             // settings.meeting_notice → {欄位名: 文字}；壞值當沒存
+    try {
+      var o = JSON.parse(v || '');
+      return (o && typeof o === 'object' && !(o instanceof Array)) ? o : {};
+    } catch (e) { return {}; }
+  }
+  // 列印頁上可存欄位（[data-mf]）→ {欄位名: 文字}。innerText 會把點字時按的 Enter 變成換行
+  function collectMeeting(spans) {
+    var out = {};
+    for (var i = 0; i < spans.length; i++) {
+      out[spans[i].getAttribute('data-mf')] =
+        String(spans[i].innerText || '').replace(/\u00a0/g, ' ').replace(/^\s+|\s+$/g, '');
+    }
+    return out;
+  }
+  // 要存的開會內容：跟預設文字一樣的欄位不存（見 MEETING_DEF），沒改過的欄位繼續跟著預設走
+  function meetingToSave(data) {
+    var out = {};
+    for (var k in data) {
+      if (Object.prototype.hasOwnProperty.call(data, k) && data[k] !== MEETING_DEF[k]) out[k] = data[k];
+    }
+    return out;
+  }
+  // 合併寄送前的「○」提醒：點名是哪幾欄。舊版只叫人「檢查開會事由、時間、地點」，○ 卻可能在主持人
+  //（「設定」沒填理事長時預設就是「理事長　○○○」），照著檢查那三欄找不到（第二批驗證員）。
+  // 「○」也可能是使用者自己寫的國字零（一一○年），所以措辭是「請檢查」而非斷定沒填。沒有 ○ 回 ''。
+  function meetingPlaceholderWarn(data) {
+    var hit = [];
+    for (var k in data) {
+      if (Object.prototype.hasOwnProperty.call(data, k) && /○/.test(data[k])) hit.push(k);
+    }
+    if (!hit.length) return '';
+    var msg = '開會內容的「' + hit.join('」「') + '」還有「○」，像是還沒填的佔位字（例如「第○屆」「○月○日」），請檢查；';
+    if (hit.indexOf('主持人') >= 0 && data['主持人'] === MEETING_DEF['主持人']) {
+      msg += '主持人預設帶「設定」頁協會資料的理事長姓名，可先到「設定」填上理事長；';
+    }
+    return msg + '要修改請先選「僅內容」改好、按「儲存開會內容」後再重開，確認無誤再寄出。';
+  }
+  function renderMeeting() {
+    return api('/settings').then(function (st) {
+      st = st || {};
+      var S = function (k) { return (st[k] == null ? '' : String(st[k])).replace(/^\s+|\s+$/g, ''); };
+
+      // (1) 寄件抬頭：協會名＋聯絡處＋立案字號＋印刷品（空欄優雅省略）
+      var head = '';
+      if (S('org_name')) head += '<div class="org">' + esc(S('org_name')) + '</div>';
+      var cl = [];
+      if (S('org_contact_addr')) cl.push('聯絡處：' + esc(S('org_contact_addr')));
+      if (S('org_reg_no')) cl.push('立案字號：' + esc(S('org_reg_no')));
+      head += '<div class="contact">' + (cl.length ? cl.join('　') + '　' : '') + printMark() + '</div>';
+
+      // (2) 標題右側：會址／聯絡地址／理事長＋電話／總幹事＋電話（空欄整列省略，同通函）
+      var side = [];
+      if (S('org_address')) side.push('會址：' + esc(S('org_address')));
+      if (S('org_contact_addr')) side.push('聯絡地址：' + esc(S('org_contact_addr')));
+      if (S('org_chair')) side.push('理事長　' + esc(S('org_chair')) + (S('org_chair_phone') ? '　' + esc(S('org_chair_phone')) : ''));
+      if (S('org_officer')) side.push('總幹事　' + esc(S('org_officer')) + (S('org_officer_phone') ? '　' + esc(S('org_officer_phone')) : ''));
+      var sideHtml = side.length
+        ? '<div class="gov-meta" style="text-align:right;line-height:1.7">' + side.join('<br>') + '</div>'
+        : '';
+
+      // (3) 欄位列：發文日期為當天；其餘有存過就用存的，沒存過預填佔位文字供點字修改。
+      //     data-mf＝可存欄位名（「儲存開會內容」據此收集）；data-fields 的區塊改由各欄位
+      //     自己當編輯區（見分派段），整塊可編輯時一次選取刪除會連欄位外框一起刪掉，就存不到了
+      var chair = S('org_chair') || '○○○';   // 主持人：有理事長姓名則帶入，否則佔位
+      var saved = parseMeetingSaved(st.meeting_notice), val = {};
+      var defs = meetingDefaults(chair);
+      for (var d = 0; d < defs.length; d++) {
+        MEETING_DEF[defs[d][0]] = defs[d][1];
+        var v = Object.prototype.hasOwnProperty.call(saved, defs[d][0]) ? saved[defs[d][0]] : defs[d][1];
+        v = String(v == null ? '' : v);
+        val[defs[d][0]] = v.replace(/^\s+|\s+$/g, '') ? esc(v).replace(/\n/g, '<br>') : '　';
+      }
+      var row = function (label, html, noSave) {
+        return '<div class="row"><span class="label">' + label + '：</span><span' +
+          (noSave ? '' : ' data-mf="' + label + '"') + '>' + html + '</span></div>';
+      };
+      var rows = function (names) {
+        return names.map(function (n) { return row(n, val[n]); }).join('');
+      };
+
+      document.title = '開會通知';
+      return '<div class="sheet">' +
+        '<div class="letterhead">' + head + '</div>' +
+        '<div class="doc-title">開會通知單</div>' +
+        sideHtml +
+        '<div class="gov-meta" data-fields="1">' +
+          row('受文者', val['受文者']) +
+          row('發文日期', esc(todayRoc()), true) +
+          row('發文字號', val['發文字號']) +
+        '</div>' +
+        '<div class="gov-meta" data-fields="1">' +
+          rows(['開會事由', '開會時間', '開會地點', '主持人', '出席者', '列席者', '副本', '附註']) +
+        '</div>' +
+        foot('開會通知') +
+      '</div>';
+    });
+  }
+
+  /* ========================================================
+     mail=all｜branch:<房>（doc=letter / meeting 適用）：
+     「寄件頁＋內容」雙面合併輸出——每位收件人兩張：
+       奇數頁【寄件資訊】（協會抬頭＋印刷品＋收件人大字地址）
+       偶數頁【通知內容】（通函／開會通知，各收件人相同）
+     雙面列印後摺紙機對摺，地址朝外即可寄（傳統作業動線）。
+     ======================================================== */
+  function renderMailMerge(contentJob, mailSpec, label) {
+    var branch = '';
+    if (mailSpec && mailSpec.indexOf('branch:') === 0) branch = mailSpec.slice(7);
+    return Promise.all([
+      contentJob,
+      api('/members'),                        // 全量：byId 供支系標註上溯（房別過濾在下方做）
+      api('/settings')
+    ]).then(function (rs) {
+      var content = rs[0] || '', all = rs[1] || [], st = rs[2] || {};
+      var byId = {};
+      for (var bi = 0; bi < all.length; bi++) byId[all[bi].id] = all[bi];
+      var order = {}, bs = st.branches || [];
+      for (var i = 0; i < bs.length; i++) order[bs[i]] = i;
+      // 寄送對象（戶長／代表制）：全庫有任何標記時只寄有標記者（含地址空白者，
+      // 空白會印出來提醒補登）；完全沒標記＝退回「在世且有地址」全寄（見 pickRecipients）
+      var pick = pickRecipients(all, branch, order), useFlag = pick.useFlag, list = pick.list;
+      list.sort(function (a, b) {              // 房（settings 順序）→ 世代 → id（與信封片頭一致）
+        var oa = order[a.branch] !== undefined ? order[a.branch] : 999;
+        var ob = order[b.branch] !== undefined ? order[b.branch] : 999;
+        if (oa !== ob) return oa - ob;
+        if ((a.branch || '') !== (b.branch || '')) return (a.branch || '') < (b.branch || '') ? -1 : 1;
+        if (a.gen !== b.gen) return a.gen - b.gen;
+        return a.id - b.id;
+      });
+      if (!list.length) throw new Error(noRecipientMsg(pick, branch || '全部房頭', label));
+      // 大量列印守門：每位收件人 2 頁，數量大時瀏覽器要吃很久甚至沒回應——先問過再產。
+      // 尤其「未標記任何寄送對象」會退回全寄（可能數百人），必須讓使用者知道並可改用戶長制。
+      if (!confirmBulk(list.length, useFlag, 2, label)) {
+        throw new Error('已取消列印。可到「族譜」逐位成員勾選「掃墓通知寄送對象」（戶長／代表），'
+          + '或改用列印頁的「僅內容」單張校對。');
+      }
+      noteZeroBranches(pick, label);
+
+      var orgName = (st.org_name || '').replace(/^\s+|\s+$/g, '');
+      var orgAddr = (st.org_contact_addr || '').replace(/^\s+|\s+$/g, '');
+      // 內容頁：第一張以外都要強制換頁（正反面對齊：奇數＝寄件、偶數＝內容）
+      function withBreak(html) {
+        return html.replace(/class="sheet( page-break)?/, 'class="sheet page-break');
+      }
+      var pages = [], tagGen = lineageTagGen(st);    // 0＝未設定起算世代，不印支系標註
+      for (var j = 0; j < list.length; j++) {
+        var m = list[j];
+        var zip = m.postalCode || '', addr = m.address || '';
+        var zm = /^(\d{3,6})\s*/.exec(addr);   // 地址開頭數字＝郵遞區號：拆出
+        if (zm) { if (!zip) zip = zm[1]; addr = addr.slice(zm[0].length); }
+        var spaced = chars(m.name).join('　');   // 按字切（罕用字不拆成兩個「�」）
+        // 稱呼沿傳統原件（115年掃墓通知單）：女士／先生＋兩位數流水號
+        var salut = (m.gender === 'F' ? '女士' : '先生') +
+          '（' + (j + 1 < 10 ? '0' : '') + (j + 1) + '）';
+        var ltag = tagGen ? lineageTag(m, byId, tagGen) : '';   // 原版右上角支系標註（退件歸檔用）
+        pages.push(
+          '<div class="sheet mail-page' + (j ? ' page-break' : '') + '">' +
+            '<div class="sender">' + printMark() +
+              (orgName ? esc(orgName) : '') + (orgAddr ? '　' + esc(orgAddr) : '') +
+            '</div>' +
+            (ltag ? '<div style="text-align:right;font-size:9pt;color:#777;margin-top:4pt">' + esc(ltag) + '</div>' : '') +
+            '<div class="recipient" style="margin-top:32%;padding-left:12%">' +
+              '<div class="zip" style="font-size:20pt;letter-spacing:6pt">' + (zip ? esc(zip) : '&nbsp;') + '</div>' +
+              '<div class="addr" style="font-size:16pt;margin:8pt 0">' + esc(addr) + '</div>' +
+              '<div class="name" style="font-size:22pt;letter-spacing:8pt;font-weight:bold">' + esc(spaced) +
+                '<span style="font-size:13pt;letter-spacing:normal;font-weight:normal">　' + salut + '</span></div>' +
+            '</div>' +
+            foot(label + '（寄件頁 ' + (j + 1) + '／' + list.length + '）') +
+          '</div>');
+        pages.push(withBreak(content));
+      }
+      document.title = label + '-寄送合併（' + (branch || '全部') + '）';
+      return pages.join('');
+    });
+  }
+
+  /* ========================================================
+     內容頁「恰好一張 A4」守門（doc=letter / meeting）
+     合併寄送是一正一反：內容頁只要多一行擠到第二張，每位收件人就變 3 頁，
+     雙面印出來整批錯位、對摺後不能寄——螢幕預覽看不出來，所以渲染後實量。
+     量法：螢幕上 .sheet 內寬＝21−2×1.8＝17.4cm，與列印版心同寬（折行相同）；
+       內容高（首個子元素頂～末個子元素底，含外距）對照版心高 29.7−2×1.8＝26.1cm，
+       扣 FIT_SLACK_CM 吸收螢幕與列印排版的細微差。
+     超過就逐級掛 .fit-1～.fit-5（見上方 <style>，說明字級最低 10pt）；
+     縮到底仍放不下回 -1，由呼叫端擋下合併。keep=false 只試算、量完復原。
+     ======================================================== */
+  var FIT_MAX = 5, PAGE_H_CM = 29.7 - 2 * 1.8, FIT_SLACK_CM = 0.4;
+  function cmToPx(cm) {                       // 用實際版面換算（不寫死 96dpi）
+    var d = document.createElement('div');
+    d.style.cssText = 'position:absolute;visibility:hidden;height:' + cm + 'cm';
+    document.body.appendChild(d);
+    var h = d.getBoundingClientRect().height;
+    document.body.removeChild(d);
+    return h;
+  }
+  function sheetContentPx(sheet) {
+    var a = sheet.firstElementChild, b = sheet.lastElementChild;
+    if (!a) return 0;
+    return b.getBoundingClientRect().bottom + (parseFloat(getComputedStyle(b).marginBottom) || 0) -
+      (a.getBoundingClientRect().top - (parseFloat(getComputedStyle(a).marginTop) || 0));
+  }
+  function setFit(sheet, k) {
+    sheet.className = sheet.className.replace(/\s*\bfit-\d\b/g, '') + (k > 0 ? ' fit-' + k : '');
+  }
+  function fitOnePage(sheets, keep) {
+    if (!sheets.length) return 0;
+    var limit = cmToPx(PAGE_H_CM - FIT_SLACK_CM), probe = sheets[0], k = 0;
+    while (sheetContentPx(probe) > limit) {   // 各份內容相同：量第一份，結果套全部
+      if (++k > FIT_MAX) { k = -1; break; }
+      setFit(probe, k);
+    }
+    for (var i = 0; i < sheets.length; i++) setFit(sheets[i], keep ? k : 0);
+    return k;
+  }
+
+  /* ── 分派 ── */
+  var root = document.getElementById('root');
+  var toolbar = document.getElementById('toolbar');
+
+  /* 渲染完成後：.sheet 內主要區塊一律可點字修改（表格改掛儲存格，
+     游標行為較合理）。僅影響本次列印，不回存資料庫。 */
+  function enableEditing() {
+    var sheets = root.querySelectorAll('.sheet');
+    for (var i = 0; i < sheets.length; i++) {
+      var kids = sheets[i].children;
+      for (var j = 0; j < kids.length; j++) {
+        var el = kids[j];
+        if (el.tagName === 'TABLE') {
+          var cells = el.querySelectorAll('th,td');
+          for (var c = 0; c < cells.length; c++) {
+            cells[c].setAttribute('contenteditable', 'true');
+          }
+        } else {
+          el.setAttribute('contenteditable', 'true');
+        }
+      }
+    }
+  }
+  // 開會通知欄位區塊：改由各欄位值自己當編輯區（整塊可編輯時，一次選取刪除會把欄位外框
+  // 一起刪掉，「儲存開會內容」就收不到那幾欄）；欄位名不開放修改
+  function lockMeetingFields() {
+    var bs = root.querySelectorAll('[data-fields]');
+    for (var i = 0; i < bs.length; i++) {
+      bs[i].setAttribute('contenteditable', 'false');
+      var vs = bs[i].querySelectorAll('.row > span:not(.label)');
+      for (var j = 0; j < vs.length; j++) vs[j].setAttribute('contenteditable', 'true');
+    }
+  }
+  // 開會通知「僅內容」：工具列加「儲存開會內容」——存進 settings.meeting_notice，
+  // 合併寄送從同一份資料帶入（舊版點字修改只活在這一頁，合併時每份都是○○佔位字）
+  function addMeetingSave() {
+    document.getElementById('toolbar-hint').textContent =
+      '可直接點文字修改。開會事由、時間、地點等改好後按「儲存開會內容」，之後「合併寄送」每一份都會用這份內容' +
+      '（抬頭與聯絡欄請到「設定」改協會資料）。欄位名稱與整行是固定的（才存得到）；' +
+      '用不到的欄位（例如列席者）把內容清空即可，欄位名仍會印出。';
+    toolbar.insertAdjacentHTML('beforeend',
+      '<button type="button" id="meeting-save" style="margin-left:8pt">儲存開會內容</button>' +
+      '<span id="meeting-save-msg" style="margin-left:8pt;font-size:12px"></span>');
+    var btn = document.getElementById('meeting-save'), msg = document.getElementById('meeting-save-msg');
+    btn.onclick = function () {
+      var data = meetingToSave(collectMeeting(root.querySelectorAll('[data-mf]')));
+      btn.disabled = true;
+      msg.style.color = 'var(--muted)';
+      msg.textContent = '儲存中…';
+      apiPost('/settings', { patch: { meeting_notice: JSON.stringify(data) } }).then(function () {
+        msg.style.color = '';
+        msg.textContent = '已儲存。之後選「合併寄送」開啟，每一份都會用這份內容。';
+      }, function (e) {
+        msg.style.color = '#b3261e';
+        msg.textContent = (e && e.status === 403)
+          ? '沒有存到：目前是「瀏覽模式」。請回繫族主視窗點左下角「瀏覽模式」輸入 PIN 解鎖，' +
+            '再回這裡按一次「儲存開會內容」（剛改的字還在，不必重打）。'
+          : '沒有存到（' + ((e && e.message) || '連不上繫族') + '）。請確認繫族主視窗還開著，' +
+            '再按一次「儲存開會內容」；剛改的字還在。';
+      }).then(function () { btn.disabled = false; });
+    };
+  }
+  function fail(msg) {
+    root.innerHTML = '<div class="sheet"><div class="doc-title">無法產生列印文件</div>' +
+      '<div class="doc-subtitle">' + esc(msg) + '</div></div>';
+  }
+
+  var job = null;
+  if (QS.doc === 'family') {
+    if (!QS.id) { fail('缺少家長成員編號（id）。請回列印頁重新選擇。'); return; }
+    job = renderFamily(QS.id);
+  } else if (QS.doc === 'lineage') {
+    if (!QS.id) { fail('缺少祖先成員編號（id）。請回列印頁重新選擇。'); return; }
+    job = renderLineage(QS.id, QS.child || '');
+  } else if (QS.doc === 'tablet') {
+    job = renderTablet(QS.branch || '');
+  } else if (QS.doc === 'roster') {
+    if (!QS.id) { fail('缺少家長成員編號（id）。請回列印頁搜尋並選擇該支家長。'); return; }
+    job = renderRoster(QS.id);
+  } else if (QS.doc === 'letter') {
+    if (!QS.event) { fail('缺少活動編號（event）。請回列印頁重新選擇祭祖活動。'); return; }
+    job = QS.mail ? renderMailMerge(renderLetter(QS.event), QS.mail, '掃墓通函')
+                  : renderLetter(QS.event);
+  } else if (QS.doc === 'labels') {
+    job = renderLabels(QS.branch || '');
+  } else if (QS.doc === 'meeting') {
+    job = QS.mail ? renderMailMerge(renderMeeting(), QS.mail, '開會通知')
+                  : renderMeeting();
+  } else if (QS.doc === 'tombgrid') {
+    if (!QS.site) { fail('缺少場地編號（site）。請回「穴排位」頁或列印頁重新選擇場地。'); return; }
+    job = renderTombGrid(QS.site);
+  } else {
+    fail('未知的文件類型（doc 須為 family / lineage / tablet / roster / letter / labels / meeting / tombgrid）。');
+    return;
+  }
+
+  job.then(function (html) {
+    root.innerHTML = html;
+    if (QS.doc === 'labels') paginateLabels();   // 信封片頭：實量高度分頁（一塊不跨頁）
+    // 通函／開會通知：內容頁須恰好一張 A4（合併寄送時縮字級塞進一張，縮不下就擋）
+    var fit = 0;
+    if (QS.doc === 'letter' || QS.doc === 'meeting') {
+      fit = fitOnePage(root.querySelectorAll('.sheet:not(.mail-page)'), !!QS.mail);
+      root.setAttribute('data-fit', String(fit));
+    }
+    // 開會通知沒有「通函說明」可改：內容是列印頁存的開會欄位＋協會資料——指到使用者真正改得到的地方
+    var isMeet = QS.doc === 'meeting';
+    var what = isMeet ? '開會通知' : '通函';
+    var shorten = isMeet ? '請先選「僅內容」精簡開會事由、附註等欄位並按「儲存開會內容」，' +
+                           '或到「設定」頁縮短「協會資料」中過長的欄位（會址、聯絡地址等）'
+                         : '請精簡「通函說明」';
+    if (QS.mail && fit < 0) {                 // 不產生錯位的合併檔：整批不出，只留說明
+      root.innerHTML = '<div class="sheet"><div class="doc-title">無法合併寄送</div>' +
+        '<div class="doc-subtitle">' + what + '內容超過一張 A4（字級縮到 10pt 仍放不下）。' +
+        '合併寄送必須「正面寄件、背面內容」剛好一張，否則雙面列印會整批錯位。<br>' +
+        (isMeet ? shorten + '後重新開啟。'
+                : '請到「祭祖」頁精簡該活動的「通函說明」後重新開啟；可先選「僅內容」確認長度。') +
+        '</div></div>';
+      toolbar.querySelector('button').disabled = true;
+      document.getElementById('toolbar-hint').hidden = true;   // 沒有可點改的內容，不顯示點字提示
+      toolbar.hidden = false;
+      toolbar.insertAdjacentHTML('beforeend', '<span class="fit-warn">' +
+        what + '內容超過一張 A4，無法合併寄送，' + shorten + '。</span>');
+      return;
+    }
+    enableEditing();
+    if (isMeet) lockMeetingFields();
+    toolbar.hidden = false;
+    if (isMeet && !QS.mail) addMeetingSave();
+    if (QS.mail) {
+      // 開會通知沒有「通函說明」欄位（舊版這裡寫死通函的指引，開會通知也照印）
+      toolbar.insertAdjacentHTML('beforeend',
+        '<span style="margin-left:10px;font-size:12px;color:var(--muted)">' +
+        '雙面列印＋對摺：正面寄件資訊、背面內容。' +
+        (isMeet ? '開會事由、時間、地點等如需修改，請先選「僅內容」改好並按「儲存開會內容」後重開；' +
+                  '抬頭與聯絡欄取自「設定」頁的協會資料。'
+                : '通函內文如需修改，請先於活動的「通函說明」編輯後重開。') +
+        (fit > 0 ? '（內容較長，已自動縮小字級排成一張 A4）' : '') + '</span>');
+      // 開會內容還是佔位字（沒存過或沒改完）：寄出去就是「○年○月○日」，醒目提醒、點名是哪幾欄
+      var c0 = root.querySelector('.sheet:not(.mail-page)');
+      var phWarn = (isMeet && c0) ? meetingPlaceholderWarn(collectMeeting(c0.querySelectorAll('[data-mf]'))) : '';
+      if (phWarn) toolbar.insertAdjacentHTML('beforeend', '<span class="fit-warn">' + esc(phWarn) + '</span>');
+    } else if (fit !== 0) {                   // 僅內容：版面不動，只提醒
+      toolbar.insertAdjacentHTML('beforeend', '<span class="fit-warn">' + (fit > 0
+        ? '提醒：內容超過一張 A4，直接列印會印成 2 張；「合併寄送」時會自動縮小字級排成一張。'
+        : '提醒：內容超過一張 A4，字級縮到 10pt 仍放不下，無法「合併寄送」；' + shorten + '。') +
+        '</span>');
+    }
+    for (var n = 0; n < NOTICES.length; n++) {   // 寄送對象只勾了部分房：列出一份都沒印的房
+      toolbar.insertAdjacentHTML('beforeend', '<span class="fit-warn">' + esc(NOTICES[n]) + '</span>');
+    }
+  }).catch(function (e) {
+    fail((e && e.message) ? e.message : '資料載入失敗，請確認以正式模式開啟並重試。');
+  });
+})();
+</script>
+</body>
+</html>

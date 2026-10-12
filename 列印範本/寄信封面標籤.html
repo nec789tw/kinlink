@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>寄信封面標籤（郵寄合併・一人一張）</title>
+<link rel="stylesheet" href="assets/print.css">
+</head>
+<body>
+
+<div class="toolbar no-print">
+  <button onclick="window.print()">列印 / 另存 PDF</button>
+</div>
+
+<div class="sheet">
+
+  <!-- 寄信封面標籤：郵寄合併，一人一張。每兩張一列（.labels 為 1fr 1fr grid） -->
+  <div class="labels">
+
+    <!-- ============ 第 1 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span>三房18世</span><!-- 房世：members.branch + generation_number -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路11號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　光　軒<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+    <!-- ============ 第 2 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span>三房18世</span><!-- 房世：members.branch + generation_number -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路22號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　立　之<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+    <!-- ============ 第 3 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span>大房18世</span><!-- 房世：members.branch + generation_number -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路33號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　澤　民<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+    <!-- ============ 第 4 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span>大房18世</span><!-- 房世：members.branch + generation_number -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路401號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　光　霖<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+    <!-- ============ 第 5 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span>三房18世</span><!-- 房世：members.branch + generation_number -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路44之2號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　敦　禮<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+    <!-- ============ 第 6 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span>三房18世</span><!-- 房世：members.branch + generation_number -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路55號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　承　遠<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+    <!-- ============ 第 7 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span>三房18世</span><!-- 房世：members.branch + generation_number -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路77號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　雅　萱<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+    <!-- ============ 第 8 張 ============ -->
+    <div class="label">
+      <div class="sender">
+        <span class="print-mark">印刷品</span>
+        宜蘭楊士芳進士文化發展協會<br>
+        聯絡處：00000 範例市示範路100號<br>
+        開會通知　<span><span class="missing">欠載</span></span><!-- 房世：members.branch + generation_number（無資料時照實標欠載） -->
+      </div>
+      <div class="recipient">
+        <div class="zip">00000</div><!-- 來源：members.postal_code -->
+        <div class="addr">範例市示範路66號</div><!-- 來源：members.current_address -->
+        <div class="name">楊　光　堯<!-- 來源：members.name --><span class="salut">女士／先生　收</span></div>
+      </div>
+    </div>
+
+  </div><!-- /.labels -->
+
+  <div class="foot">宜蘭楊士芳進士文化發展協會（楊士芳進士家族）開源範本　·　本範本所有人物、地址、電話皆為虛構示範</div>
+
+</div><!-- /.sheet -->
+
+</body>
+</html>

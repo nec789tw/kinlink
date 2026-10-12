@@ -1,0 +1,4 @@
+# 換行規則：.bat 一律 CRLF（cmd.exe 對 LF 批次檔會出怪錯——專案鐵律）
+*.bat text eol=crlf
+# 其餘文字檔由 git 自動正規化
+* text=auto

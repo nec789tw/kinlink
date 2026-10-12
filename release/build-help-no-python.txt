@@ -1,0 +1,8 @@
+[繫族 build] 錯誤：找不到可以用來打包的 Python。
+  打包工具 PyInstaller 6.10.0 與 pythonnet 只支援 Python 3.10 到 3.13 的 64 位元版；
+  這台電腦沒有裝 Python，或裝的版本都不在這個範圍內（例如只有 3.14，或只有 32 位元版）。
+  請這樣做：
+    1. 到 https://www.python.org/downloads/ 下載並安裝 Python 3.12 的 64 位元版
+       （Windows installer (64-bit)；建議用 3.12，發行版就是用它打包驗證的）。
+       安裝時勾選「Add python.exe to PATH」；原本的 3.14 不用移除，兩個版本可以並存。
+    2. 裝好後重新執行 build_exe.bat。

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>族譜表</title>
+  <link rel="stylesheet" href="assets/print.css">
+</head>
+<body>
+
+<div class="toolbar no-print">
+  <button onclick="window.print()">列印 / 另存 PDF</button>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 第一張：直系族譜表（樣本：楊○○高祖直系族譜表，含楊光鈞該支）           -->
+<!-- 來源：直系族譜表 dump（out_sample.txt 第一個檔）                        -->
+<!-- ===================================================================== -->
+<div class="sheet">
+
+  <!-- 表名：直系族譜表。世代＋名諱由資料庫帶入 -->
+  <!-- 來源：第○世 + members.name + 「高祖直系族譜表」 -->
+  <div class="doc-title">第十世 楊<span class="missing">○○</span>高祖直系族譜表</div>
+
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>關係</th>
+        <th>家族姓名</th>
+        <th>性別</th>
+        <th>出生西元年</th>
+        <th>年號</th>
+        <th>農曆月日</th>
+        <th>備　註<br>（農曆年日期）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 一人一列。關係＝相對主角推算；姓名保留字號括號；地名保留新舊雙寫 -->
+
+      <!-- 來源：relationship / members.name / members.gender / members.birth_year / members.era_name / members.lunar_date / members.note -->
+      <tr>
+        <td class="c">父</td>
+        <td>楊 <span class="missing">○</span> <span class="missing">○</span></td>
+        <td class="c">男</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">康熙　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>範例省範例府範例縣（示範地）</td>
+      </tr>
+      <tr>
+        <td class="c">母</td>
+        <td>楊 <span class="missing">○</span> <span class="missing">○</span></td>
+        <td class="c">女</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">康熙　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>範例省範例府範例縣（示範地）</td>
+      </tr>
+      <tr>
+        <td class="c">長男</td>
+        <td>楊 <span class="missing">○</span> <span class="missing">○</span></td>
+        <td class="c">男</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">康熙　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>17　/05月04日歿　壽82歲</td>
+      </tr>
+      <tr>
+        <td class="c">次男</td>
+        <td>楊 <span class="missing">○</span> <span class="missing">○</span></td>
+        <td class="c">男</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">康熙　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>17　/02月29日歿　示範省示範府示範縣</td>
+      </tr>
+      <tr>
+        <td class="c">三男</td>
+        <td>楊光鈞</td>
+        <td class="c">男</td>
+        <td class="c">1707</td>
+        <td class="c">康熙46年</td>
+        <td class="c">07月20日</td>
+        <td>示範庄（範例縣示範鎮示範里）</td>
+      </tr>
+      <tr>
+        <td class="c">三媳婦</td>
+        <td>楊柳雅涵(慧)</td>
+        <td class="c">女</td>
+        <td class="c">1713</td>
+        <td class="c">康熙52年</td>
+        <td class="c">03月03日</td>
+        <td>示範庄（範例縣示範鎮示範里）</td>
+      </tr>
+      <tr>
+        <td class="c">內孫女</td>
+        <td>楊 <span class="missing">○</span> <span class="missing">○</span></td>
+        <td class="c">女</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">雍正　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>範例省範例府範例縣（示範地）</td>
+      </tr>
+      <tr>
+        <td class="c">內孫女</td>
+        <td>楊 <span class="missing">○</span> <span class="missing">○</span></td>
+        <td class="c">女</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">雍正　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>範例省範例府範例縣（示範地）</td>
+      </tr>
+      <tr>
+        <td class="c">內孫女</td>
+        <td>楊 <span class="missing">○</span> <span class="missing">○</span></td>
+        <td class="c">女</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">雍正　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>範例省範例府範例縣（示範地）</td>
+      </tr>
+      <tr>
+        <td class="c">內孫</td>
+        <td>楊　光彬(彬)</td>
+        <td class="c">男</td>
+        <td class="c">1734</td>
+        <td class="c">雍正12年</td>
+        <td class="c">07月12日</td>
+        <td>示範庄（範例縣示範鎮示範里）</td>
+      </tr>
+      <tr>
+        <td class="c">內孫</td>
+        <td>楊　光灝</td>
+        <td class="c">男</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">乾隆　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>外出未歸　下落待查</td>
+      </tr>
+      <tr>
+        <td class="c">內孫</td>
+        <td>楊　光琛</td>
+        <td class="c">男</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td class="c">乾隆　年</td>
+        <td class="c"><span class="missing">欠 載</span></td>
+        <td>外出未歸　下落待查</td>
+      </tr>
+      <tr>
+        <td class="c">內孫</td>
+        <td>楊　光綸(綸)</td>
+        <td class="c">男</td>
+        <td class="c">1754</td>
+        <td class="c">乾隆19年</td>
+        <td class="c">01月12日</td>
+        <td>示範庄（範例縣示範鎮示範里）</td>
+      </tr>
+
+      <!-- 底部遷徙史長段落：不可丟的自由文字，整段保留（示範用虛構敘述） -->
+      <!-- 來源：lineage.migration_history（整段自由文字） -->
+      <tr class="narrative">
+        <td colspan="7">（以下為示範用虛構遷徙敘述，人名、地名與年代皆為虛構）某年高祖示範公攜家眷渡海來台，初居範例縣甲鄉（今範例縣示範鎮示範里），後遷範例縣乙庄墾殖（今範例縣示範鄉示範村）。家族人丁漸盛後，長房、二房、三房分別移居範例縣丙里、丁里與戊里開墾定居（今範例縣示範鎮一帶），各自繁衍成今日三大房。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="foot">繫族 KinLink ｜ 直系族譜表</div>
+  <div class="foot">宜蘭楊士芳進士文化發展協會（楊士芳進士家族）開源範本　·　本範本所有人物、地址、電話皆為虛構示範</div>
+</div>
+
+<!-- ===================================================================== -->
+<!-- 第二張：全家族表（與直系表共用同一版式；在世者下方含住址／電話子列）     -->
+<!-- 來源：全家族表 dump（全家族表_中世代.txt / 全家族表_近世代.txt）         -->
+<!-- ===================================================================== -->
+<div class="sheet page-break">
+
+  <!-- 表名：全家族表。世代＋名諱由資料庫帶入 -->
+  <!-- 來源：第○世 + members.name + 「全家族表」 -->
+  <div class="doc-title">第十六世 楊 光 璋 全家族表</div>
+
+  <table class="grid">
+    <thead>
+      <tr>
+        <th>關係</th>
+        <th>家族姓名</th>
+        <th>性別</th>
+        <th>出生西元年</th>
+        <th>歲次</th>
+        <th>年號</th>
+        <th>農曆月日</th>
+        <th>備註（農曆年日期）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 一人一列；在世成員下方緊接一列「住址：／電話：」子列 -->
+
+      <!-- 來源：relationship / members.name / members.gender / members.birth_year / members.zodiac_year / members.era_name / members.lunar_date / members.note -->
+      <tr>
+        <td class="c">父</td>
+        <td>楊 光 璋</td>
+        <td class="c">男</td>
+        <td class="c">1863</td>
+        <td class="c">癸亥年</td>
+        <td class="c">同治02年</td>
+        <td class="c">03月19日</td>
+        <td>1885/04月12日歿　範例縣示範鎮</td>
+      </tr>
+      <!-- 住址／電話子列（在世者用，跨欄呈現） -->
+      <!-- 來源：members.current_address / members.phone -->
+      <tr>
+        <td colspan="4">住址：範例市示範路1號</td>
+        <td colspan="4">電話：0900-000-001</td>
+      </tr>
+
+      <!-- 母（範例：欄位待資料庫帶入，姓名以欠載呈現） -->
+      <!-- 來源：relationship / members.name / members.gender / … -->
+      <tr>
+        <td class="c">母</td>
+        <td><span class="missing">欠 載</span></td>
+        <td class="c">女</td>
+        <td class="c"></td>
+        <td class="c"></td>
+        <td class="c"></td>
+        <td class="c"></td>
+        <td></td>
+      </tr>
+      <!-- 來源：members.current_address / members.phone -->
+      <tr>
+        <td colspan="4">住址：</td>
+        <td colspan="4">電話：</td>
+      </tr>
+
+      <!-- 後續子女／配偶逐列展開，在世者皆附住址／電話子列 -->
+      <!-- 來源：依家族成員逐一迴圈帶入（members + relationship） -->
+      <tr>
+        <td class="c">長男</td>
+        <td>楊 光 軒</td>
+        <td class="c">男</td>
+        <td class="c">1890</td>
+        <td class="c">庚寅年</td>
+        <td class="c">光緒16年</td>
+        <td class="c">08月11日</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="4">住址：範例市示範路2號</td>
+        <td colspan="4">電話：0900-000-002</td>
+      </tr>
+
+      <tr>
+        <td class="c">長媳婦</td>
+        <td>楊 澤 民</td>
+        <td class="c">女</td>
+        <td class="c">1893</td>
+        <td class="c">癸巳年</td>
+        <td class="c">光緒19年</td>
+        <td class="c">04月06日</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="4">住址：範例市示範路2號</td>
+        <td colspan="4">電話：0900-000-003</td>
+      </tr>
+
+      <tr>
+        <td class="c">次男</td>
+        <td>楊 光 霖</td>
+        <td class="c">男</td>
+        <td class="c">1895</td>
+        <td class="c">乙未年</td>
+        <td class="c">光緒21年</td>
+        <td class="c">10月初八</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td colspan="4">住址：範例市示範路3號</td>
+        <td colspan="4">電話：0900-000-004</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="foot">繫族 KinLink ｜ 全家族表（在世者附住址／電話）</div>
+  <div class="foot">宜蘭楊士芳進士文化發展協會（楊士芳進士家族）開源範本　·　本範本所有人物、地址、電話皆為虛構示範</div>
+</div>
+
+</body>
+</html>

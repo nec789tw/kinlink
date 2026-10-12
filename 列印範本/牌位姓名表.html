@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>示範墓園墳墓楊氏歷代祖先牌位姓名資料</title>
+  <link rel="stylesheet" href="assets/print.css">
+</head>
+<body>
+
+  <!-- 列印工具列（列印時自動隱藏） -->
+  <div class="toolbar no-print">
+    <button onclick="window.print()">列印 / 另存 PDF</button>
+  </div>
+
+  <div class="sheet">
+
+    <!-- 文件大標題 -->
+    <!-- 來源：墳墓資料表名稱（固定）—示範墓園墳墓楊氏歷代祖先牌位姓名資料 -->
+    <h1 class="doc-title">示範墓園墳墓楊氏歷代祖先牌位姓名資料</h1>
+
+    <!--
+      忠實重現原始版型：
+      原始 Excel 一個人佔「兩列」——
+        第一列＝國曆／西元呈現（歲次干支、西元年、國曆生年、生卒歿日）
+        第二列＝農曆呈現（年號＋農曆年月日）
+      此處以連續兩個 <tr> 重現此雙列生卒結構。
+      「房」（大房／二房／三房）只標在第十三世；第十一、十二世原始留空。
+    -->
+    <table class="grid">
+      <thead>
+        <tr>
+          <th>三大房</th>
+          <th>世別</th>
+          <th>姓&nbsp;&nbsp;名</th>
+          <th>性別</th>
+          <th>歲次</th>
+          <th>西元</th>
+          <th>出生年月日</th>
+          <th>農曆年日期</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- ====== 第十一世 ====== -->
+        <!-- 楊光銘（牌位敬稱：男 → 〇〇楊公；此處依資料端僅存姓名＋性別，敬稱由樣板呈現） -->
+        <tr>
+          <td class="c"></td><!-- 房：第11世原始留空 -->
+          <td class="c">第11世</td><!-- 來源：members.generation -->
+          <td>楊光銘</td><!-- 來源：members.name -->
+          <td class="c">男</td><!-- 來源：members.gender -->
+          <td class="c">丙申年</td><!-- 來源：members.ganzhi（歲次干支） -->
+          <td class="c">1716年</td><!-- 來源：members.birth_year_ad -->
+          <td class="c">月&nbsp;&nbsp;日</td><!-- 來源：members.birth_month_day（國曆，欠載則留空格） -->
+          <td>1797年03月28日歿</td><!-- 來源：members.death_date -->
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td><!-- 第二列固定標示「農曆」 -->
+          <td class="c">康熙55年07月20日</td><!-- 來源：members.birth_lunar（年號＋農曆年月日） -->
+          <td></td>
+        </tr>
+
+        <!-- 周雅蓁（女 → 牌位敬稱〇〇某氏，敬稱由樣板套用） -->
+        <tr>
+          <td class="c"></td>
+          <td class="c">第11世</td>
+          <td>周雅蓁</td><!-- 來源：members.name -->
+          <td class="c">女</td>
+          <td class="c">壬寅年</td>
+          <td class="c">1722年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1806年07月02日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">康熙61年03月03日</td>
+          <td></td>
+        </tr>
+
+        <!-- ====== 第十二世 ====== -->
+        <!-- 楊昭 -->
+        <tr>
+          <td class="c"></td>
+          <td class="c">第12世</td>
+          <td>楊&nbsp;&nbsp;昭</td><!-- 來源：members.name -->
+          <td class="c">男</td>
+          <td class="c">癸亥年</td>
+          <td class="c">1743年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1819年08月11日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">乾隆08年07月12日</td>
+          <td></td>
+        </tr>
+
+        <!-- 昭夫人（原始多欄欠載：歲次、西元、生卒皆無，照實以欠載／空格呈現） -->
+        <tr>
+          <td class="c"></td>
+          <td class="c">第12世</td>
+          <td>昭夫人</td><!-- 來源：members.name -->
+          <td class="c">女</td>
+          <td class="c"><span class="missing">欠載</span></td><!-- 歲次欠載 -->
+          <td class="c">年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>年&nbsp;&nbsp;月&nbsp;&nbsp;日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">年&nbsp;&nbsp;月&nbsp;&nbsp;日</td>
+          <td></td>
+        </tr>
+
+        <!-- 楊光瀚 -->
+        <tr>
+          <td class="c"></td>
+          <td class="c">第12世</td>
+          <td>楊光瀚</td><!-- 來源：members.name -->
+          <td class="c">男</td>
+          <td class="c">癸未年</td>
+          <td class="c">1763年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1844年05月19日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">乾隆28年01月12日</td>
+          <td></td>
+        </tr>
+
+        <!-- 林婉 -->
+        <tr>
+          <td class="c"></td>
+          <td class="c">第12世</td>
+          <td>林&nbsp;&nbsp;婉</td><!-- 來源：members.name -->
+          <td class="c">女</td>
+          <td class="c">己丑年</td>
+          <td class="c">1769年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1841年06月18日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">乾隆34年01月26日</td>
+          <td></td>
+        </tr>
+
+        <!-- ====== 第十三世（此世起標示房別） ====== -->
+        <!-- 大房 楊光翔 -->
+        <tr>
+          <td class="c">大房</td><!-- 來源：members.branch（房別，第13世起填入） -->
+          <td class="c">第13世</td>
+          <td>楊光翔</td><!-- 來源：members.name -->
+          <td class="c">男</td>
+          <td class="c">丙午年</td>
+          <td class="c">1786年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1867年02月25日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">乾隆51年03月20日</td>
+          <td></td>
+        </tr>
+
+        <!-- 大房 陳玉 -->
+        <tr>
+          <td class="c">大房</td>
+          <td class="c">第13世</td>
+          <td>陳&nbsp;&nbsp;玉</td><!-- 來源：members.name -->
+          <td class="c">女</td>
+          <td class="c">戊午年</td>
+          <td class="c">1798年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1882年12月04日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">嘉慶03年09月21日</td>
+          <td></td>
+        </tr>
+
+        <!-- 二房 楊光毅（農曆年月日部分欠載，照實保留空格） -->
+        <tr>
+          <td class="c">二房</td>
+          <td class="c">第13世</td>
+          <td>楊光毅</td><!-- 來源：members.name -->
+          <td class="c">男</td>
+          <td class="c">庚申年</td>
+          <td class="c">1800年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1895年02月01日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">嘉慶05年&nbsp;&nbsp;月&nbsp;&nbsp;日</td>
+          <td></td>
+        </tr>
+
+        <!-- 二房 何琚（歲次欠載） -->
+        <tr>
+          <td class="c">二房</td>
+          <td class="c">第13世</td>
+          <td>何&nbsp;&nbsp;琚</td><!-- 來源：members.name -->
+          <td class="c">女</td>
+          <td class="c"><span class="missing">欠載</span></td><!-- 歲次欠載 -->
+          <td class="c">年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1893年04月23日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">年&nbsp;&nbsp;月&nbsp;&nbsp;日</td>
+          <td></td>
+        </tr>
+
+        <!-- 三房 楊光謙（歿日原始以 1869/04月18日 斜線寫法，照實保留） -->
+        <tr>
+          <td class="c">三房</td>
+          <td class="c">第13世</td>
+          <td>楊光謙</td><!-- 來源：members.name -->
+          <td class="c">男</td>
+          <td class="c">癸亥年</td>
+          <td class="c">1803年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1869/04月18日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">嘉慶08年07月11日</td>
+          <td></td>
+        </tr>
+
+        <!-- 三房 吳柔（歿日斜線寫法 1844/02月21日，照實保留） -->
+        <tr>
+          <td class="c">三房</td>
+          <td class="c">第13世</td>
+          <td>吳&nbsp;&nbsp;柔</td><!-- 來源：members.name -->
+          <td class="c">女</td>
+          <td class="c">丁卯年</td>
+          <td class="c">1807年</td>
+          <td class="c">月&nbsp;&nbsp;日</td>
+          <td>1844/02月21日歿</td>
+        </tr>
+        <tr>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td></td>
+          <td class="c"></td>
+          <td class="c"></td>
+          <td class="c">農曆</td>
+          <td class="c">嘉慶12年05月06日</td>
+          <td></td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <div class="foot">宜蘭楊士芳進士文化發展協會（楊士芳進士家族）開源範本　·　本範本所有人物、地址、電話皆為虛構示範</div>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>繫族 KinLink 交接單</title>
+<link rel="stylesheet" href="assets/print.css">
+</head>
+<body>
+
+<div class="toolbar no-print"><button onclick="window.print()">列印 / 另存 PDF</button></div>
+
+<div class="sheet">
+
+  <div class="doc-title">繫族 KinLink 交接單</div>
+  <div class="doc-subtitle">請以筆手寫填妥．本單含 PIN，只交給接手的人，勿影印散發．連同隨身碟與操作手冊一併交付</div>
+
+  <!-- 區塊一：系統鑰匙（沒有這些，接手的人打不開、發不了新版） -->
+  <table class="grid">
+    <tr><th colspan="2">一、系統鑰匙</th></tr>
+    <tr>
+      <td style="width:11em">現行編輯 PIN</td>
+      <td style="height:2.4em"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-size:9.5pt;color:#555">
+        若 PIN 仍是出廠的 0000，請先到「設定 → 編輯鎖 → 設定／重設 PIN」改一組再填寫。<br>
+        PIN 遺失時：程式內無法自行重設，請找會用電腦的親友以 SQLite 工具開啟 繫族.db，
+        把 settings 表的 edit_pin 改回 0000。
+      </td>
+    </tr>
+    <tr>
+      <td>軟體發佈來源<br><span style="font-size:9pt;color:#555">GitHub（owner/repo）</span></td>
+      <td style="height:2.4em"></td>
+    </tr>
+    <tr>
+      <td>能發佈新版的人<br><span style="font-size:9pt;color:#555">能登入上列 GitHub 帳號者</span></td>
+      <td style="height:2.4em"></td>
+    </tr>
+  </table>
+
+  <!-- 區塊二：東西放哪（系統裡查不到、只能靠這張紙傳承的資訊） -->
+  <table class="grid" style="margin-top:10pt">
+    <tr><th colspan="2">二、東西放哪</th></tr>
+    <tr>
+      <td style="width:11em">隨身碟正本<br><span style="font-size:9pt;color:#555">裝 繫族.exe 與族譜資料那支</span></td>
+      <td style="height:2.4em">保管人：　　　　　　　存放地點：</td>
+    </tr>
+    <tr>
+      <td>備用副本<br><span style="font-size:9pt;color:#555">隨身碟 backups 資料夾以外的備份</span></td>
+      <td style="height:2.4em"></td>
+    </tr>
+    <tr>
+      <td>家族原始文件<br><span style="font-size:9pt;color:#555">祖譜 Excel／Word／掃描正本</span></td>
+      <td style="height:2.4em"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="font-size:9.5pt;color:#555">
+        原始文件含真實姓名、地址、電話，不在公開網路上，遺失即失傳——請務必寫清楚放在誰手上。
+      </td>
+    </tr>
+  </table>
+
+  <!-- 區塊三：人與時間 -->
+  <table class="grid" style="margin-top:10pt">
+    <tr><th colspan="4">三、人與時間</th></tr>
+    <tr>
+      <td style="width:11em">移交人</td>
+      <td style="height:2.4em">簽名：　　　　　　電話：　　　　　　日期：　　年　　月　　日</td>
+      <td style="width:0;padding:0;border:none"></td>
+      <td style="width:0;padding:0;border:none"></td>
+    </tr>
+    <tr>
+      <td>接手人</td>
+      <td style="height:2.4em">簽名：　　　　　　電話：　　　　　　日期：　　年　　月　　日</td>
+      <td style="width:0;padding:0;border:none"></td>
+      <td style="width:0;padding:0;border:none"></td>
+    </tr>
+    <tr>
+      <td>最後一次資料更新</td>
+      <td style="height:2em">約民國　　　年　　月</td>
+      <td style="width:0;padding:0;border:none"></td>
+      <td style="width:0;padding:0;border:none"></td>
+    </tr>
+    <tr>
+      <td>最後一次備份</td>
+      <td style="height:2em">　　年　　月　　日（可抄隨身碟 backups 資料夾裡最新檔名上的日期）</td>
+      <td style="width:0;padding:0;border:none"></td>
+      <td style="width:0;padding:0;border:none"></td>
+    </tr>
+    <tr>
+      <td>技術協力親友<br><span style="font-size:9pt;color:#555">會用電腦、可求助的人</span></td>
+      <td style="height:2.4em">姓名：　　　　　　　電話：</td>
+      <td style="width:0;padding:0;border:none"></td>
+      <td style="width:0;padding:0;border:none"></td>
+    </tr>
+  </table>
+
+  <!-- 注意事項 -->
+  <table class="grid" style="margin-top:10pt">
+    <tr><th>四、注意事項</th></tr>
+    <tr>
+      <td style="font-size:10pt;line-height:1.8">
+        1．本單含 PIN，填妥後<b>勿影印散發</b>，只交給接手的人。<br>
+        2．交接＝交三樣東西：<b>隨身碟＋本單＋操作手冊</b>（見操作手冊「交接三件事」）。<br>
+        3．族譜資料含真實個資，<b>永遠不要放上公開網路</b>；開源的只有程式，不是資料。
+      </td>
+    </tr>
+  </table>
+
+  <div class="foot">繫族 KinLink　·　本範本所有人物、地址、電話皆為虛構示範</div>
+
+</div>
+
+</body>
+</html>

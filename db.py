@@ -409,18 +409,25 @@ def seed_demo():
             (id_bochang, "BURIAL", "台南市南山公墓 楊氏祖塋", "A 區第 12 排"),
         )
 
-        # ── 穴排位場地：一張 3×5 示範格子（第一代夫妻在第 1 列；全為虛構；內容見 DEMO_TOMB_SITE）──
-        site = DEMO_TOMB_SITE
-        who = {"楊伯昌": id_bochang, "林淑梅": id_shuzhen}
-        cells = [{"r": r, "c": c, "memberId": who[nm] if nm else None, "text": text}
-                 for r, c, nm, text in site["cells"]]
-        cur.execute(
-            """INSERT INTO tomb_sites (name, title, subtitle, footer, rows, cols, row_labels, cells)
-               VALUES (?,?,?,?,?,?,?,?)""",
-            (site["name"], site["title"], site["subtitle"], site["footer"], site["rows"], site["cols"],
-             json.dumps(site["row_labels"], ensure_ascii=False), json.dumps(cells, ensure_ascii=False)),
-        )
-        id_site = cur.lastrowid
+        # ── 穴排位場地：方格、階梯、面板各一張（全為虛構；內容見 DEMO_TOMB_SITES）──
+        who = {"楊伯昌": id_bochang, "林淑梅": id_shuzhen, "楊建華": id_jianhua, "王美玲": id_meiling,
+               "楊建國": id_jianguo, "楊承恩": id_chengen}
+        demo_sites = []
+        for site in DEMO_TOMB_SITES:
+            cells = []
+            for r, c, nm, text, top in site["cells"]:
+                cell = {"r": r, "c": c, "memberId": who[nm] if nm else None, "text": text}
+                if top:
+                    cell["top"] = top
+                cells.append(cell)
+            cur.execute(
+                """INSERT INTO tomb_sites (name, title, subtitle, footer, rows, cols, row_labels, cells, layout, layout_opts)
+                   VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                (site["name"], site["title"], site["subtitle"], site["footer"], site["rows"], site["cols"],
+                 json.dumps(site["row_labels"], ensure_ascii=False), json.dumps(cells, ensure_ascii=False),
+                 site["layout"], json.dumps(site["layout_opts"])),
+            )
+            demo_sites.append([cur.lastrowid, site["name"]])
 
         # ── 祭祖事件：清明合祭（不綁定特定逝者）──
         # 名稱的干支要跟日期對得上：2026-04-05 是丙午年（0.2.1 以前誤寫「乙巳年」，體檢 opensource-11）
@@ -454,7 +461,7 @@ def seed_demo():
                 "SELECT id, name FROM members WHERE id IN (%s) ORDER BY id"
                 % ",".join("?" * len(demo_ids)), demo_ids)],
             "ritual_events": [[id_event, DEMO_EVENT_NAME]],
-            "tomb_sites": [[id_site, site["name"]]],
+            "tomb_sites": demo_sites,
             "branches": DEMO_BRANCHES,      # 清空示範時，這組裡已沒人用的從房頭設定拿掉（其他房頭不動）
         }
         cur.execute(
@@ -474,18 +481,29 @@ DEMO_EVENT_NAME = "丙午年清明掃墓"
 DEMO_BRANCHES = ["長房", "次房"]
 
 # 示範場地的完整內容（seed_demo 照這份灌；清空示範時拿來比對使用者有沒有動過——
-# 格子、抬頭、列欄設定任一改過，就當成使用者的場地保留，只解除指向示範成員的連結）。
-# cells：(列, 欄, 指到的示範成員姓名或 None, 文字)。0.2.0／0.2.1 灌的內容與此相同。
-DEMO_TOMB_SITE = {
-    "name": "示範墓園・楊氏祖塋",
-    "title": "楊氏祖塋穴排位圖（虛構示範）",
-    "subtitle": "西元 1985 年入穴　1門",
-    "footer": "地址：範例市示範里示範路一段1號（虛構示範）",
-    "rows": 3,
-    "cols": 5,
-    "row_labels": ["第1世", "第2世", "第3世"],
-    "cells": [(0, 1, "楊伯昌", ""), (0, 3, "林淑梅", ""), (1, 2, None, "（預留）")],
-}
+# 格子、抬頭、列欄設定、版型任一改過，就當成使用者的場地保留，只解除指向示範成員的連結）。
+# cells：(列, 欄, 指到的示範成員姓名或 None, 文字, 上方小字)。
+# 第一張（方格）0.2.0～0.2.6 灌的內容與此相同；階梯、面板兩張 0.2.7 起才有（2026-10-12 總幹事：
+# 新家族一打開就要看得到三種版型各長什麼樣——主牌位放先人，面板放後代，跟楊家的圖一樣）。
+_DEMO_ADDR = "地址：範例市示範里示範路一段1號（虛構示範）"
+DEMO_TOMB_SITES = [
+    {"name": "示範墓園・楊氏祖塋", "title": "楊氏祖塋穴排位圖（虛構示範）", "subtitle": "西元 1985 年入穴　1門",
+     "footer": _DEMO_ADDR, "layout": "grid", "layout_opts": {}, "rows": 3, "cols": 5,
+     "row_labels": ["第1世", "第2世", "第3世"],
+     "cells": [(0, 1, "楊伯昌", "", ""), (0, 3, "林淑梅", "", ""), (1, 2, None, "（預留）", "")]},
+    {"name": "示範墓園・主牌位（階梯）", "title": "楊氏祖塋主牌位（虛構示範）", "subtitle": "西元 1990 年安位",
+     "footer": _DEMO_ADDR, "layout": "steps", "layout_opts": {"rowWidths": [2, 4, 6]}, "rows": 3, "cols": 6,
+     "row_labels": [],
+     "cells": [(0, 0, "楊伯昌", "", "一世"), (0, 1, "林淑梅", "", "一世"),
+               (1, 0, "楊建華", "", "二世"), (1, 1, "王美玲", "", "二世"), (1, 2, "楊建國", "", "二世"),
+               (1, 3, None, "", "二世")] + [(2, c, None, "", "三世") for c in range(6)]},
+    {"name": "示範墓園・面板", "title": "楊氏祖塋穴排位面板（虛構示範）", "subtitle": "西元 2020 年入穴",
+     "footer": _DEMO_ADDR, "layout": "panels", "layout_opts": {"panelCols": 2, "panelRows": [4, 3]}, "rows": 4, "cols": 4,
+     "row_labels": [],
+     "cells": [(0, 0, "楊承恩", "", "三世"), (0, 1, None, "", "三世"), (1, 0, None, "", "四世"),
+               (0, 2, None, "神位", "")]},
+]
+DEMO_TOMB_SITE = DEMO_TOMB_SITES[0]
 
 # 舊版（0.2.0）seed 沒記 demo_manifest：清空示範時改用這組固定特徵辨識示範列。
 # **必須與上方 seed_demo 灌入的內容一致**（tests/test_h1_demo_clear.py 會比對，改示範內容忘了同步就失敗）。
@@ -496,7 +514,7 @@ DEMO_SIGNATURE = {
                 ("楊建國", 2, "1960-12-03"), ("楊承恩", 3, "1985-04-22")],
     # 名稱＋日期；「乙巳年清明掃墓」是 0.2.0／0.2.1 灌的舊名（干支寫錯），留著才清得掉舊示範庫
     "ritual_events": [(DEMO_EVENT_NAME, "2026-04-05"), ("乙巳年清明掃墓", "2026-04-05")],
-    "tomb_sites": [DEMO_TOMB_SITE["name"]],                 # 名稱
+    "tomb_sites": [x["name"] for x in DEMO_TOMB_SITES],      # 名稱（0.2.0 只灌第一張；多列名稱不影響舊庫）
 }
 
 

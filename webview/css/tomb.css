@@ -24,10 +24,20 @@
 .tomb-steps .ts-v { writing-mode: vertical-rl; text-orientation: upright; font-size: 11.5pt; font-weight: bold;
   letter-spacing: 0.4mm; margin: 0 auto; white-space: pre; }
 .tomb-steps .ts-head { font-size: 10pt; line-height: 1.45; }
+/* 名字超過 4 個字縮字（js/tombdraw.js fit()）：面板格寬 15.5mm、階梯格高 20.5mm 都只放得下 4 個字 */
+.tomb-panels .tp-nm.l5 { font-size: 8pt; }
+.tomb-panels .tp-nm.l6 { font-size: 6.5pt; }
+.tomb-panels .tp-nm.l7 { font-size: 5.5pt; }
+.tomb-steps .ts-v.l5 { font-size: 9.5pt; }
+.tomb-steps .ts-v.l6 { font-size: 7.5pt; }
+.tomb-steps .ts-v.l7 { font-size: 6.5pt; letter-spacing: 0.1mm; }
 
 /* ── app「穴排位」頁：一張白紙，字型、抬頭、方格線照 列印範本/assets/print.css（不跟深色主題變色）── */
-/* width:max-content——畫面窄時不准把格子擠扁（會跟印出來不一樣），由 app.js fitPaper 整張等比縮小 */
-.tomb-paper { display: inline-block; width: max-content; text-align: left; background: #fff; color: #1a1a1a; padding: 6mm 8mm;
+/* width:max-content——畫面窄時不准把格子擠扁（會跟印出來不一樣），由 app.js fitPaper 整張等比縮小；
+   min-width＝A4 橫式扣掉頁邊（同 print.css .sheet.landscape 29.7cm－左右各 1.2cm）：
+   格子少的場地紙張也不變窄，抬頭、地址、日期才會跟列印一樣排在兩側、不擠成一團 */
+.tomb-paper { display: inline-block; width: max-content; min-width: 27.3cm; box-sizing: border-box; text-align: left;
+  background: #fff; color: #1a1a1a; padding: 6mm 8mm;
   font-family: "標楷體", "DFKai-SB", "BiauKai", "KaiTi", "AR PL UKai TW", serif;
   box-shadow: 0 1px 4px rgba(0, 0, 0, .25); border-radius: 2px; }
 .tomb-paper .doc-title { text-align: center; font-size: 16pt; font-weight: bold; letter-spacing: 3pt; margin: 0 0 8pt; }

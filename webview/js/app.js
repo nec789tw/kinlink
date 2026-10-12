@@ -4910,6 +4910,8 @@ window.createMemberPicker = function (opts) {
   // ── CSV 來回（Excel 也能當編輯器）──
   btnExport.addEventListener('click', function(){
     if(!cur || !cur.id){ toast('請先儲存場地再匯出', 'err'); return; }
+    // 匯出的是存好的版面：有沒存的修改時，Excel 的形狀會跟畫面對不上
+    if(siteDirty()){ toast('有修改還沒儲存，請先按「儲存」再匯出', 'err'); return; }
     window.KinAPI.exportTombSiteCsv(cur.id).then(function(csv){
       var a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -4923,11 +4925,15 @@ window.createMemberPicker = function (opts) {
     fileImport.value = '';
     if(!f) return;
     if(!cur || !cur.id){ toast('請先儲存場地，再匯入 CSV 覆寫格子', 'err'); return; }
+    // 匯入後會重讀場地：沒存的修改會被蓋掉，先講
+    if(siteDirty()){ toast('有修改還沒儲存，請先按「儲存」再匯入', 'err'); return; }
+    var grid = (cur.layout || 'grid') === 'grid';
     requireEdit(function(){
-      if(!window.confirm('匯入會整張覆寫「' + cur.name + '」的格子與列標籤，確定？')) return;
+      if(!window.confirm(grid ? '匯入會整張覆寫「' + cur.name + '」的格子與列標籤，確定？'
+                              : '匯入會覆寫「' + cur.name + '」的所有格子（版型與格數不變），確定？')) return;
       window.KinAPI.importTombSiteCsv(cur.id, f).then(function(r){
-        toast('已匯入 ' + r.rows + '×' + r.cols + '，自動對到族親 ' + r.matched + ' 格' +
-              (r.unmatched && r.unmatched.length ? '；' + r.unmatched.length + ' 格存成文字' : ''), 'ok');
+        toast('已匯入' + (grid ? ' ' + r.rows + '×' + r.cols : '') + '，自動對到族親 ' + r.matched + ' 格' +
+              (r.unmatched && r.unmatched.length ? '；' + r.unmatched.length + ' 格對不到族譜裡的人，存成文字（灰字）' : ''), 'ok');
         return loadSites(cur.id);
       }).catch(function(e){ toast('匯入失敗：' + e.message, 'err'); });
     });

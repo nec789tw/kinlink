@@ -144,13 +144,15 @@ def _demo_targets(conn):
 
 
 def _demo_site_edited(conn, site, cells, info) -> bool:
-    """示範場地被使用者動過嗎（第一批驗證 L-3c）——與 db.DEMO_TOMB_SITE（seed_demo 灌入的內容）比：
-    格子、抬頭、副標、頁尾、列欄數、列標籤任一不同就算動過，清空示範時當成使用者的場地保留。
+    """示範場地被使用者動過嗎（第一批驗證 L-3c）——與 db.DEMO_TOMB_SITES 裡同名的那張（seed_demo 灌入的內容）比：
+    格子（含上方小字）、抬頭、副標、頁尾、列欄數、版型、列標籤（方格才有）任一不同就算動過，清空示範時當成使用者的場地保留。
     格子比「位置 →（指到的示範成員姓名、文字）」，不比 JSON 字面（前端存檔會重排、去空白）；
     指到已刪成員的格子（使用者先刪了某位示範成員）不算動過場地。info：示範成員 id → 列（含 name）。"""
     import db  # noqa: PLC0415
-    from .tombsites import _json_list  # noqa: PLC0415
-    seed = db.DEMO_TOMB_SITE
+    from .tombsites import _json_list, _layout_of  # noqa: PLC0415
+    seed = next((x for x in db.DEMO_TOMB_SITES if x["name"] == site["name"]), None)
+    if seed is None:
+        return True
     got = {}
     for c in cells:
         if not isinstance(c, dict):
@@ -168,14 +170,17 @@ def _demo_site_edited(conn, site, cells, info) -> bool:
             else:
                 who = "已刪"
         text = str(c.get("text") or "").strip()
-        if who is not None or text:
-            got[(c.get("r"), c.get("c"))] = (who, text)
-    want = {(r, k): (nm, t) for r, k, nm, t in seed["cells"]}
-    if set(got) != set(want) or any(got[p][1] != t or got[p][0] not in (nm, "已刪" if nm else None)
-                                    for p, (nm, t) in want.items()):
+        top = str(c.get("top") or "").strip()
+        if who is not None or text or top:
+            got[(c.get("r"), c.get("c"))] = (who, text, top)
+    want = {(r, k): (nm, t, tp) for r, k, nm, t, tp in seed["cells"]}
+    if set(got) != set(want) or any(got[p][1] != t or got[p][2] != tp or got[p][0] not in (nm, "已刪" if nm else None)
+                                    for p, (nm, t, tp) in want.items()):
         return True
     labels = [str(x or "").strip() for x in _json_list(site["row_labels"])]
-    return (labels != seed["row_labels"]
+    # 面板／階梯不用列標籤（畫面存檔會送「第N列」補齊值），只有方格要比
+    return ((seed["layout"] == "grid" and labels != seed["row_labels"])
+            or _layout_of(site) != (seed["layout"], seed["layout_opts"])
             or (site["title"] or "", site["subtitle"] or "", site["footer"] or "", site["rows"], site["cols"])
             != (seed["title"], seed["subtitle"], seed["footer"], seed["rows"], seed["cols"]))
 
@@ -222,7 +227,7 @@ def clear_demo() -> dict:
                 "SELECT id, name, generation_name, gender FROM members WHERE id IN (%s)" % q, list(mem))}
         # 場地格子：示範場地被使用者動過（指入自家成員、改格子文字、改抬頭或列欄）就保留；
         # 其餘場地解除指向示範成員的連結（稱呼寫成文字）
-        for s in conn.execute("SELECT id, title, subtitle, footer, rows, cols, row_labels, cells "
+        for s in conn.execute("SELECT id, name, title, subtitle, footer, rows, cols, row_labels, cells, layout, layout_opts "
                               "FROM tomb_sites").fetchall():
             cells = _json_list(s["cells"])
             linked = {int(c["memberId"]) for c in cells if isinstance(c, dict) and c.get("memberId")}

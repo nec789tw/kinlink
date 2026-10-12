@@ -31,6 +31,8 @@
     return '<td data-r="' + r + '" data-c="' + c + '"' + (cls ? ' class="' + cls + '"' : '') + ' title="點一下編輯這一格">';
   }
   function title(s) { return '<div class="doc-title">' + esc(s.title || s.name || '穴排位圖') + '</div>'; }
+  // 名字超過 4 個字就縮字（格子只放得下 4 個字；自動稱呼「字號　姓公」是 5 個字），列印與 app 一起縮
+  function fit(label) { var n = chars(label).length; return n >= 7 ? ' l7' : (n === 6 ? ' l6' : (n === 5 ? ' l5' : '')); }
 
   // 面板（照家族 2022 年面板圖）：幾塊紅框格子並排（各塊列數可不同，頂端對齊）；每格上方小字（世代）＋名字
   function panels(s, edit) {
@@ -42,7 +44,7 @@
         for (var k = 0; k < pc; k++) {
           var c = p * pc + k, cell = g[r + ',' + c];
           t += tdOpen(r, c, cell, edit) + (cell && cell.top ? '<div class="tp-top">' + esc(cell.top) + '</div>' : '') +
-               '<div class="tp-nm">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
+               '<div class="tp-nm' + fit(cell && cell.label) + '">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
         }
         t += '</tr>';
       }
@@ -67,7 +69,7 @@
         if (top) anyTop = true;
         if (run !== null && top !== run) { band += bandTh(run, span); span = 0; }
         run = top; span++;
-        cells += tdOpen(r, c, cell, edit) + '<div class="ts-v">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
+        cells += tdOpen(r, c, cell, edit) + '<div class="ts-v' + fit(cell && cell.label) + '">' + (cell ? esc(cell.label || '') : '') + '</div></td>';
       }
       if (span) band += bandTh(run, span);
       return '<div class="ts-step"><table class="ts-grid"><tbody>' + (anyTop ? '<tr>' + band + '</tr>' : '') +

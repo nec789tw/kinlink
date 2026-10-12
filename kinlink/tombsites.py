@@ -330,27 +330,179 @@ def delete_tomb_site(sid) -> dict:
 
 # ============================================================
 # CSV 來回（讓 Excel 也能當編輯器）
+#   方格：第一欄＝列標籤，其餘＝格子文字（稱呼）。
+#   面板／階梯（2026-10-12；紙上怎麼排，Excel 就怎麼排）：一層（階梯）／一列（面板）在 Excel 佔兩列——
+#   上面「世代」（格子上方小字）、下面「名字」；第一欄寫「第1層・世代」「第1層・名字」。
+#   由左到右照紙上的順序（階梯紙上由右往左讀，所以 Excel 最左邊＝那層的最後一格）；面板幾塊之間空一欄。
+#   名字寫「○」＝這格留空：匯出時每個空位都標 ○，Excel 裡看得出圖的形狀。
+#   匯入只填格子，不改版型與格數（形狀在畫面上設好再匯出範本）。
 # ============================================================
 
+EMPTY_MARKS = ("○", "〇")
+_CN_DIGIT = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+
+
+def _gen_num(top):
+    """格子上方小字 → 世代數（十三世／第13世／13 → 13）；看不懂回 None。同名同姓時用來分辨是哪一位。"""
+    s = re.sub(r"[第世代\s]", "", str(top or ""))
+    if s.isdigit():
+        return int(s)
+    m = re.fullmatch(r"([一二三四五六七八九])?十([一二三四五六七八九])?|([一二三四五六七八九])", s)
+    if not m:
+        return None
+    if m.group(3):
+        return _CN_DIGIT[m.group(3)]
+    return (_CN_DIGIT[m.group(1)] if m.group(1) else 1) * 10 + (_CN_DIGIT[m.group(2)] if m.group(2) else 0)
+
+
+def _norm(s):
+    return str(s or "").replace(" ", "").replace("　", "").strip()
+
+
+def _matcher(conn, old_cells):
+    """回 match(r, c, 格子文字, 上方小字) → (memberId 或 None, 要存的 text)。
+    1) 這一格原本就連到族親、而且文字跟原本印的一樣（沒改過）→ 原連結、原文字照舊——匯出再匯回不靠比對，
+       連結一格都不掉（2026-10-12 實測：照原圖抄的「立宗楊公」「香娘林氏」這類寫法對不回族譜的「楊立宗(承遠)」「林阿香」，
+       只靠比對匯回 136 格連結剩 47）。
+    2) 其他格子用名字比對，鍵：姓名（含去掉括號的）、字號、稱呼（承遠　楊公——匯出格式本身）、名、名＋姓＋公／氏，
+       女性另認「名＋娘＋姓＋氏」「姓＋氏＋名」（族譜與穴排位圖常見寫法）。只有唯一一位才連；
+       同名不只一位時用上方小字的世代再分；有寫世代而那位族人的世代對不上 → 不連（寧可灰字讓人手動連，不錯掛）。
+    印的字照 Excel：寫的是「姓名」「字號」本身、或恰好就是自動稱呼（承遠　楊公）時存成自動稱呼（族人改名會跟著變），
+    其他寫法照原樣印。"""
+    by_key, gen_of, plain, auto = {}, {}, {}, {}
+    for m in conn.execute("SELECT id, name, generation_name, gender, generation_number FROM members"):
+        gen_of[m["id"]] = m["generation_number"]
+        name = _norm(re.sub(r"[（(].*?[)）]", "", m["name"] or ""))
+        style = _norm(m["generation_name"])
+        sur, given = name[:1], name[1:]
+        keys = {m["name"], name, style, honor_label(m)}
+        if len(given) >= 2:
+            keys.add(given)
+        if given:
+            keys.add(given + sur + ("氏" if m["gender"] == "F" else "公"))
+            if m["gender"] == "F":
+                keys |= {sur + "氏" + given, given + "娘" + sur + "氏"}
+        plain[m["id"]] = {_norm(m["name"]), name, style} - {""}
+        auto[m["id"]] = honor_label(m)
+        for key in keys:
+            key = _norm(key)
+            if key:
+                by_key.setdefault(key, set()).add(m["id"])
+    old = {(c["r"], c["c"]): c for c in old_cells}
+
+    def match(r, c, val, top=""):
+        o = old.get((r, c))
+        if o and o.get("memberId") and _norm(val) == _norm(o.get("label")):
+            return o["memberId"], o.get("text") or ""
+        ids, g = by_key.get(_norm(val)) or set(), _gen_num(top)
+        if g is not None:
+            ids = {i for i in ids if gen_of.get(i) in (None, g)}
+        if len(ids) != 1:
+            return None, val[:MAX_TEXT]
+        mid = next(iter(ids))
+        return mid, ("" if _norm(val) in plain[mid] or val == auto[mid] else val[:MAX_TEXT])
+    return match
+
+
+def _sheet_slots(layout, opts):
+    """面板／階梯在 Excel 的位置：[(列說明, [(Excel 欄序 j, r, c), ...]), ...]，每項＝一組「世代＋名字」兩列。
+    j 從 0 起算（不含第一欄說明）。"""
+    if layout == "steps":
+        return [("第%d層" % (r + 1), [(j, r, w - 1 - j) for j in range(w)])
+                for r, w in enumerate(opts["rowWidths"])]
+    pc, pr = opts["panelCols"], opts["panelRows"]
+    return [("第%d列" % (r + 1), [(p * (pc + 1) + k, r, p * pc + k)
+                                 for p in range(len(pr)) if r < pr[p] for k in range(pc)])
+            for r in range(max(pr))]
+
+
+def _col_name(j):
+    """Excel 欄名（j＝0 是 B 欄：A 欄是說明）。"""
+    n, s = j + 2, ""
+    while n:
+        n, rem = divmod(n - 1, 26)
+        s = chr(65 + rem) + s
+    return s
+
+
+def _csv_bytes(rows):
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\r\n")
+    for row in rows:
+        w.writerow(row)
+    return ("﻿" + buf.getvalue()).encode("utf-8")      # UTF-8 BOM＋CRLF 給 Excel
+
+
 def export_tomb_site_csv(sid) -> bytes:
-    """GET /api/tomb-site/{id}/csv：第一欄＝列標籤，其餘＝格子文字（稱呼）。UTF-8 BOM＋CRLF 給 Excel。"""
+    """GET /api/tomb-site/{id}/csv：方格＝第一欄列標籤、其餘格子文字；面板／階梯見本節開頭的格式。"""
     site = get_tomb_site(sid)
+    if site["layout"] != "grid":
+        g = {(c["r"], c["c"]): c for c in site["cells"]}
+        sheet = _sheet_slots(site["layout"], site["layoutOpts"])
+        width = 1 + max(j for _, slots in sheet for j, _, _ in slots)
+        out = []
+        for lab, slots in sheet:
+            tops, names = [""] * width, [""] * width
+            for j, r, c in slots:
+                cell = g.get((r, c)) or {}
+                tops[j] = cell.get("top") or ""
+                names[j] = cell.get("label") or EMPTY_MARKS[0]
+            out += [[lab + "・世代"] + tops, [lab + "・名字"] + names]
+        return _csv_bytes(out)
     grid = [[""] * site["cols"] for _ in range(site["rows"])]
     for c in site["cells"]:
         if isinstance(c.get("r"), int) and isinstance(c.get("c"), int) \
                 and 0 <= c["r"] < site["rows"] and 0 <= c["c"] < site["cols"]:
             grid[c["r"]][c["c"]] = c["label"]
-    buf = io.StringIO()
-    w = csv.writer(buf, lineterminator="\r\n")
-    for i, row in enumerate(grid):
-        w.writerow([site["rowLabels"][i]] + row)
-    return ("﻿" + buf.getvalue()).encode("utf-8")
+    return _csv_bytes([site["rowLabels"][i]] + row for i, row in enumerate(grid))
+
+
+def _import_sheet(table, layout, opts, match):
+    """面板／階梯的 CSV → (cells, matched, unmatched)；位置對不上圖的形狀就 400 說清楚哪一格。"""
+    sheet = _sheet_slots(layout, opts)
+    unit = "層" if layout == "steps" else "列"
+    pairs, tops = [], None
+    for row in table:                       # 第一欄有「世代」＝世代列（給下一列名字用）；其餘都當名字列
+        vals = [(v or "").strip() for v in row[1:]]
+        if "世代" in (row[0] or ""):
+            tops = vals
+        else:
+            pairs.append((row[0] or "", tops or [], vals))
+            tops = None
+    if len(pairs) > len(sheet):
+        raise ApiError(400, "Excel 裡有 %d %s名字，但這個場地只設定 %d %s；請先在「版面設定」改好格數、儲存，再匯入"
+                       % (len(pairs), unit, len(sheet), unit))
+    cells, matched, unmatched = [], 0, []
+    for (lab, slots), (_, tops, names) in zip(sheet, pairs):
+        on_map = {j for j, _, _ in slots}
+        for j in range(max(len(tops), len(names))):
+            nm = names[j] if j < len(names) else ""
+            tp = tops[j] if j < len(tops) else ""
+            if j not in on_map and ((nm and nm not in EMPTY_MARKS) or (tp and tp not in EMPTY_MARKS)):
+                raise ApiError(400, "%s的 %s 欄不在圖上（%s）——請只填匯出範本裡有的位置" % (
+                    lab, _col_name(j),
+                    "這一層只有 %d 格" % len(slots) if layout == "steps" else "面板之間的空白欄、或這塊面板沒有這一列"))
+        for j, r, c in slots:
+            top = tops[j] if j < len(tops) else ""
+            nm = names[j] if j < len(names) else ""
+            top = "" if top in EMPTY_MARKS else top[:MAX_TEXT]
+            nm = "" if nm in EMPTY_MARKS else nm
+            if not nm and not top:
+                continue
+            mid, text = match(r, c, nm, top) if nm else (None, "")
+            if mid:
+                matched += 1
+            elif nm:
+                unmatched.append(nm)
+            cells.append({"r": r, "c": c, "memberId": mid, "text": text, "top": top})
+    return cells, matched, unmatched
 
 
 def import_tomb_site_csv(sid, data) -> dict:
     """POST /api/tomb-site/{id}/csv（raw bytes，需編輯模式）：覆寫整張格子。
-    第一欄＝列標籤，其餘＝格子文字；文字若恰好等於某位成員的姓名或字號（唯一）→ 指到該成員，
-    否則存為自由文字。回 {rows, cols, matched, unmatched[]}。"""
+    方格：第一欄＝列標籤，其餘＝格子文字（尺寸跟著 CSV）；面板／階梯：見本節開頭（版型與格數不變）。
+    沒改過的格子保留原連結；其他格子比對族親（見 _matcher），對不到存為自由文字。
+    回 {rows, cols, matched, unmatched[]}。"""
     if not _LOCK["editMode"]:
         raise ApiError(403, "edit mode required")
     from .csv_io import _import_decode   # noqa: PLC0415（同成員匯入：只收 UTF-8／UTF-8-BOM，其他編碼回 400 白話提示）
@@ -359,24 +511,22 @@ def import_tomb_site_csv(sid, data) -> dict:
     table = [r for r in table if any((x or "").strip() for x in r)]
     if not table:
         raise ApiError(400, "CSV 內沒有資料列")
-    rows = len(table)
-    cols = max(len(r) - 1 for r in table)
-    if rows > MAX_DIM or cols > MAX_DIM or cols < 1:
-        raise ApiError(400, "格子表尺寸須在 1～%d 列／欄之間（第一欄為列標籤）" % MAX_DIM)
     conn = _conn()
     try:
         old = _site_row(conn, sid)
-        if _layout_of(old)[0] != "grid":
-            raise ApiError(400, "面板、階梯版型請在畫面上逐格編輯（CSV 匯入只支援方格）")
-        # 比對鍵：姓名、字號，以及「匯出格式」的稱呼本身（承遠　楊公／阿香　林氏）——
-        # 否則匯出再匯回會把所有族親連結掉成純文字（2026-08-21 效能與 bug 檢查抓到）。
-        by_key = {}
-        for m in conn.execute("SELECT id, name, generation_name, gender FROM members"):
-            keys = [m["name"], m["generation_name"], honor_label(m)]
-            for key in keys:
-                key = (key or "").replace(" ", "").replace("　", "").strip()
-                if key:
-                    by_key.setdefault(key, set()).add(m["id"])
+        match = _matcher(conn, _resolve_cells(conn, _json_list(old["cells"])))
+        layout, opts = _layout_of(old)
+        if layout != "grid":
+            layout, opts, rows, cols = _clean_layout(layout, opts)
+            cells, matched, unmatched = _import_sheet(table, layout, opts, match)
+            cells = _clean_cells(conn, cells, rows, cols, _inside(layout, opts))
+            conn.execute("UPDATE tomb_sites SET cells=? WHERE id=?", (json.dumps(cells, ensure_ascii=False), old["id"]))
+            conn.commit()
+            return {"ok": True, "rows": rows, "cols": cols, "matched": matched, "unmatched": unmatched}
+        rows = len(table)
+        cols = max(len(r) - 1 for r in table)
+        if rows > MAX_DIM or cols > MAX_DIM or cols < 1:
+            raise ApiError(400, "格子表尺寸須在 1～%d 列／欄之間（第一欄為列標籤）" % MAX_DIM)
         cells, matched, unmatched = [], 0, []
         labels = []
         for r, row in enumerate(table):
@@ -385,12 +535,11 @@ def import_tomb_site_csv(sid, data) -> dict:
                 val = (val or "").strip()
                 if not val:
                     continue
-                ids = by_key.get(val.replace(" ", "").replace("　", ""))
-                if ids and len(ids) == 1:
-                    cells.append({"r": r, "c": k, "memberId": next(iter(ids)), "text": ""})
+                mid, text = match(r, k, val)
+                cells.append({"r": r, "c": k, "memberId": mid, "text": text})
+                if mid:
                     matched += 1
                 else:
-                    cells.append({"r": r, "c": k, "memberId": None, "text": val[:MAX_TEXT]})
                     unmatched.append(val)
         conn.execute(
             "UPDATE tomb_sites SET rows=?, cols=?, row_labels=?, cells=? WHERE id=?",

@@ -473,8 +473,26 @@
       subtitle: '西元 1985 年入穴　1門', footer: '地址：範例市示範里示範路一段1號（虛構示範）',
       rows: 4, cols: 5, rowLabels: ['第1世', '第2世', '第3世', '第4世'],
       cells: [ { r: 0, c: 2, memberId: 1, text: '' }, { r: 1, c: 1, memberId: 2, text: '' },
-               { r: 1, c: 3, memberId: 3, text: '' }, { r: 2, c: 0, memberId: null, text: '（預留）' } ] }
+               { r: 1, c: 3, memberId: 3, text: '' }, { r: 2, c: 0, memberId: null, text: '（預留）' } ] },
+    // 階梯、面板各一張（2026-10-12：新家族一打開就看得到三種版型）：主牌位放先人、面板放後代，跟真實家族的圖一樣
+    { id: 2, name: '示範墓園・主牌位（階梯）', title: '楊氏祖塋主牌位（虛構示範）', subtitle: '西元 1990 年安位',
+      footer: '地址：範例市示範里示範路一段1號（虛構示範）', rows: 3, cols: 6, rowLabels: [],
+      layout: 'steps', layoutOpts: { rowWidths: [2, 4, 6] },
+      cells: [ { r: 0, c: 0, memberId: 1, text: '', top: '一世' }, { r: 0, c: 1, memberId: null, text: '（預留）', top: '一世' },
+               { r: 1, c: 0, memberId: 2, text: '', top: '二世' }, { r: 1, c: 1, memberId: 3, text: '', top: '二世' },
+               { r: 1, c: 2, memberId: 4, text: '', top: '二世' }, { r: 1, c: 3, memberId: null, text: '', top: '二世' },
+               { r: 2, c: 0, memberId: 5, text: '', top: '三世' }, { r: 2, c: 1, memberId: 6, text: '', top: '三世' },
+               { r: 2, c: 2, memberId: 7, text: '', top: '三世' }, { r: 2, c: 3, memberId: 8, text: '', top: '三世' },
+               { r: 2, c: 4, memberId: null, text: '', top: '三世' }, { r: 2, c: 5, memberId: null, text: '', top: '三世' } ] },
+    { id: 3, name: '示範墓園・面板', title: '楊氏祖塋穴排位面板（虛構示範）', subtitle: '西元 2020 年入穴',
+      footer: '地址：範例市示範里示範路一段1號（虛構示範）', rows: 4, cols: 4, rowLabels: [],
+      layout: 'panels', layoutOpts: { panelCols: 2, panelRows: [4, 3] },
+      cells: [ { r: 0, c: 0, memberId: 9, text: '', top: '四世' }, { r: 0, c: 1, memberId: 10, text: '', top: '四世' },
+               { r: 1, c: 0, memberId: 11, text: '', top: '四世' }, { r: 1, c: 1, memberId: null, text: '', top: '四世' },
+               { r: 0, c: 2, memberId: null, text: '神位', top: '' } ] }
   ];
+  // 面板／階梯的 Excel 格式（每層兩列：世代、名字）只在正式版後端實作，展示模式不重寫一份
+  var MOCK_CSV_GRID_ONLY = '展示模式只示範方格的 Excel 匯出入；面板、階梯請用正式版（繫族.exe）';
   function tombLabel(m) {            // 男「字號　姓公」／女「名　姓氏」（與後端 honor_label 同規則）
     var name = String(m.name || '').replace(/[（(].*?[)）]/g, '').replace(/\s/g, '');
     if (name.length < 2) return name;
@@ -914,6 +932,7 @@
     },
     exportTombSiteCsv: function (id) {
       return this.getTombSite(id).then(function (s) {
+        if (s.layout !== 'grid') throw new Error(MOCK_CSV_GRID_ONLY);
         var grid = {}, lines = [];
         for (var i = 0; i < s.cells.length; i++) grid[s.cells[i].r + ',' + s.cells[i].c] = s.cells[i].label;
         for (var r = 0; r < s.rows; r++) { var row = [s.rowLabels[r]]; for (var c = 0; c < s.cols; c++) row.push(grid[r + ',' + c] || ''); lines.push(row.map(function (v) { return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(',')); }
@@ -922,6 +941,8 @@
     },
     importTombSiteCsv: function (id, blob) {
       if (!lockState.editMode) return Promise.reject(new Error('需先解鎖編輯模式'));
+      for (var k = 0; k < SITES.length; k++)
+        if (SITES[k].id === Number(id) && (SITES[k].layout || 'grid') !== 'grid') return Promise.reject(new Error(MOCK_CSV_GRID_ONLY));
       var self = this;
       return (blob.text ? blob.text() : Promise.resolve(String(blob))).then(function (text) {
         var rows = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(function (l) { return l.trim(); }).map(function (l) { return l.split(','); });

@@ -466,6 +466,11 @@ class _KinHandler(BaseHTTPRequestHandler):
             self._json(_call(db, "check_update") or {"configured": False})
             return
 
+        # GET /api/update/progress → {got, want}（下載更新進行中，畫面每秒問一次顯示百分比）
+        if path == "/api/update/progress":
+            self._json(_call(db, "update_progress") or {})
+            return
+
         raise ApiError(404, "unknown api")
 
     def _route_post(self, path: str, query: dict):

@@ -747,19 +747,35 @@
     return String(s).replace(/[０-９－／．]/g, function (c) { return HW_DATE.charAt(FW_DATE.indexOf(c)); });
   }
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
-  // 寫入用：年-月-日（/ . 全形皆可、月日不補零）→ 補零的 YYYY-MM-DD；只有四位數年份維持年份；
-  // 其他看不懂的文字（「不詳」「已歿」、原文、不存在的日期）原樣保留。空值原樣回。
+  // 寫入用：年-月-日（/ . 全形皆可、月日不補零）→ 補零的 YYYY-MM-DD；也認 19600501、1960年5月1日、
+  // 民國49年5月1日、49/5/1、0490501（民國年＋1911；2026-10-13 總幹事）。只有年份→四位數西元年；
+  // 其他看不懂的文字（「不詳」「已歿」、原文、不存在的日期）原樣保留。空值原樣回。規則同 lunar.py _DATE_INPUT_RES。
+  var DATE_INPUTS = [
+    [/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/, 0],
+    [/^(\d{4})(\d{2})(\d{2})$/, 0],
+    [/^(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日?$/, 0],
+    [/^(?:民國|民)\s*(\d{1,3})\s*[年\/.-]\s*(\d{1,2})\s*[月\/.-]\s*(\d{1,2})\s*日?$/, 1911],
+    [/^(\d{1,3})[-\/.](\d{1,2})[-\/.](\d{1,2})$/, 1911],
+    [/^(\d{3})(\d{2})(\d{2})$/, 1911]
+  ];
+  var YEAR_INPUTS = [[/^(\d{4})\s*年?$/, 0], [/^(?:民國|民)\s*(\d{1,3})\s*年?$/, 1911]];
+  function pad4(n) { return ('000' + n).slice(-4); }
   function normalizeDate(s) {
     if (s === null || s === undefined || s === '') return s;
     var t = dateHalfWidth(String(s).replace(/^\s+|\s+$/g, ''));
-    var m = /^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/.exec(t);
-    if (m) {
-      var y = +m[1], mo = +m[2], d = +m[3];
+    for (var i = 0; i < DATE_INPUTS.length; i++) {
+      var m = DATE_INPUTS[i][0].exec(t);
+      if (!m) continue;
+      var y = +m[1] + DATE_INPUTS[i][1], mo = +m[2], d = +m[3];
       var leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
       var dim = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][mo - 1];
-      return (y >= 1 && dim && d >= 1 && d <= dim) ? (m[1] + '-' + pad2(mo) + '-' + pad2(d)) : s;
+      return (y >= 1 && dim && d >= 1 && d <= dim) ? (pad4(y) + '-' + pad2(mo) + '-' + pad2(d)) : s;
     }
-    return /^\d{4}$/.test(t) ? t : s;
+    for (var j = 0; j < YEAR_INPUTS.length; j++) {
+      var my = YEAR_INPUTS[j][0].exec(t);
+      if (my) return pad4(+my[1] + YEAR_INPUTS[j][1]);
+    }
+    return s;
   }
   // 讀取用：日期字串 → [年, 月, 日]（缺的部分為 null）；看不懂回 null
   function dateParts(s) {
@@ -1153,6 +1169,7 @@
     /* 展示模式：無後端可連 GitHub／寫檔 */
     checkUpdate: function () { return delay({ configured: false, mock: true }); },
     downloadUpdate: function () { return delay({ ok: false, message: '（展示模式）請於正式模式使用更新功能' }); },
+    updateProgress: function () { return delay({ got: 0, want: 0 }); },
     /* 展示模式無真實資料庫可清（清空示範資料僅正式模式提供） */
     clearDemo: function () {
       return Promise.reject(new Error('展示模式無法清空示範資料，請由 繫族.exe 開啟正式模式'));
@@ -1258,6 +1275,7 @@
     /* 軟體更新：後端代打 GitHub（僅按下時連網）；下載為 繫族_new.exe＋套用更新.bat */
     checkUpdate: function () { return httpFetch('GET', '/update/check'); },
     downloadUpdate: function () { return httpFetch('POST', '/update/download'); },
+    updateProgress: function () { return httpFetch('GET', '/update/progress'); },
     /* 清空示範資料（僅示範資料庫）→ {ok, deleted, kept, backup, message} */
     clearDemo: function () { return httpFetch('POST', '/demo/clear'); }
   };
@@ -1326,6 +1344,7 @@
     exportData:   function (fmt)              { return route('exportData', [fmt]); },
     checkUpdate:  function ()                 { return route('checkUpdate', []); },
     downloadUpdate: function ()               { return route('downloadUpdate', []); },
+    updateProgress: function ()               { return route('updateProgress', []); },
     clearDemo:    function ()                 { return route('clearDemo', []); },
 
     /* —— 事件匯流排 —— */

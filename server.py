@@ -56,7 +56,7 @@ from kinlink.maintenance import (                                      # noqa: F
     _SETTINGS_BLOCKLIST, _SETTINGS_NOLOCK, _UPDATE_HOSTS,
     _active_db_path, _apply_bat_text, _branches_from_value, _branches_to_value,
     auto_backup, backup, check_update, clear_demo, download_update,
-    get_settings, restore, restore_upload, update_settings,
+    get_settings, restore, restore_upload, update_progress, update_settings,
 )
 from kinlink.httpd import (                                            # noqa: F401
     _CONTENT_TYPES, KinServer, _call, _first, _int_id, make_server,

@@ -986,8 +986,8 @@ window.createMemberPicker = function (opts) {
   // 雙曆徽章（R3：「農」優先顯示後端農曆換算值（borax），無換算值時維持原始記載原文）
   function calBadge(solar, lunar){
     var out = '';
-    if(!blank(solar)) out += '<span class="cal-badge cal-solar">國 '+esc(solar)+'</span>';
-    if(!blank(lunar)) out += '<span class="cal-badge cal-lunar">農 '+esc(lunar)+'</span>';
+    if(!blank(solar)) out += '<span class="cal-badge cal-solar">國曆 '+esc(solar)+'</span>';   // 寫全：「國」會被看成民國
+    if(!blank(lunar)) out += '<span class="cal-badge cal-lunar">農曆 '+esc(lunar)+'</span>';
     return out || '<span class="dim">—</span>';
   }
 
@@ -2770,7 +2770,7 @@ window.createMemberPicker = function (opts) {
       '<td>' + inp('name', d.name, r.kind === 'newKid' ? '新子女姓名' : (r.kind === 'newSpouse' ? '配偶姓名' : '')) + '</td>' +
       '<td>' + inp('styleName', d.styleName, '') + '</td>' +
       '<td>' + gsel + '</td>' +
-      '<td>' + inp('birth', d.birth, '例：1955') + '</td>' +
+      '<td>' + inp('birth', d.birth, '例：1960-05-01') + '</td>' +
       '<td>' + inp('death', death, '在世留空') + '</td>' +
       '<td>' + last + '</td>' +
       '<td class="fam-act">' + act + '</td></tr>';
@@ -5018,11 +5018,14 @@ window.createMemberPicker = function (opts) {
   if (repoSave) repoSave.addEventListener('click', function () {
     var v = (repoIn && repoIn.value || '').trim();
     if (v && !/^[\w.-]+\/[\w.-]+$/.test(v)) { t('格式須為 owner/repo', 'err'); return; }
+    window.requireEdit(function () { saveRepo(v); });
+  });
+  function saveRepo(v) {
     window.KinAPI.setSettings({ github_repo: v }).then(function () {
       savedRepo = v;
       t(v ? '發佈來源已儲存' : '已清除發佈來源', 'ok');
     }).catch(function (e) { t((e && e.message) || '儲存失敗（需編輯模式）', 'err'); });
-  });
+  }
 
   if (checkBtn) checkBtn.addEventListener('click', function () {
     checkBtn.disabled = true;
@@ -5038,7 +5041,7 @@ window.createMemberPicker = function (opts) {
         if (msgEl) msgEl.textContent = '有新版本：v' + r.latest + '（目前 v' + r.current + '）';
         if (dlBtn) dlBtn.hidden = !r.assetUrl;
         if (!r.assetUrl) showManualUpdate();
-        if (hintBox && r.notes) { hintBox.hidden = false; hintTxt.textContent = '更新說明：' + String(r.notes).slice(0, 300); }
+        if (hintBox && r.notes) { hintBox.hidden = false; hintTxt.textContent = '更新說明：' + String(r.notes).replace(/`/g, '').replace(/^#+\s*/gm, '').slice(0, 300); }
       } else {
         if (msgEl) msgEl.textContent = '已是最新版本（v' + r.current + '）。';
         if (dlBtn) dlBtn.hidden = true; if (hintBox) hintBox.hidden = true;
@@ -5049,23 +5052,48 @@ window.createMemberPicker = function (opts) {
     });
   });
 
+  // 要解鎖才能下載：跟其他編輯一樣跳解鎖視窗、解鎖後接著下載
+  // （2026-10-13 總幹事實測：舊版沒解鎖只跳「API 403：edit mode required」，提示不夠明確）
   if (dlBtn) dlBtn.addEventListener('click', function () {
     if (!lastCheck || !lastCheck.assetUrl) return;
+    window.requireEdit(startDownload);
+  });
+  function startDownload() {
+    if (dlBtn.disabled) return;
     dlBtn.disabled = true;
-    t('下載中，請稍候…', 'ok');
+    var mb = function (b) { return (b / 1048576).toFixed(1); };
+    var size = Number(lastCheck.assetSize) || 0;
+    if (msgEl) msgEl.textContent = '下載中…（' + (size ? '約 ' + mb(size) + ' MB，' : '') + '視網路約需 1～3 分鐘，請勿關閉程式）';
+    // 下載中每秒問一次進度（同日實測：一分多鐘只有灰按鈕，看起來像卡住）
+    var poll = setInterval(function () {
+      window.KinAPI.updateProgress().then(function (p) {
+        if (!p || !p.want || !dlBtn.disabled) return;
+        var pct = Math.min(99, Math.floor(p.got * 100 / p.want));
+        dlBtn.textContent = '下載中 ' + pct + '%';
+        if (msgEl) msgEl.textContent = '下載中：' + mb(p.got) + '／' + mb(p.want) + ' MB（' + pct + '%），請勿關閉程式';
+      }).catch(function () {});
+    }, 1000);
+    var done = function () { clearInterval(poll); dlBtn.disabled = false; dlBtn.textContent = '下載更新'; };
     window.KinAPI.downloadUpdate().then(function (r) {
-      dlBtn.disabled = false;
+      done();
       if (r && r.ok) {
+        if (msgEl) msgEl.textContent = '新版已下載完成（v' + lastCheck.latest + '）。';
         if (hintBox) {
           hintBox.hidden = false;
           hintTxt.textContent = '已下載新版：' + (r.file || '繫族_new.exe') + '。請關閉本程式後，雙擊同資料夾的「套用更新.bat」完成改版。';
         }
         t('下載完成，關閉程式後雙擊 套用更新.bat', 'ok');
       } else {
+        if (msgEl) msgEl.textContent = (r && r.message) || '下載失敗';
         t((r && r.message) || '下載失敗', 'err');
       }
-    }).catch(function (e) { dlBtn.disabled = false; t((e && e.message) || '下載失敗', 'err'); });
-  });
+    }).catch(function (e) {
+      done();
+      var m = String((e && e.message) || '下載失敗').replace(/^API \d+：/, '');
+      if (msgEl) msgEl.textContent = m;
+      t(m, 'err');
+    });
+  }
 })();
 
 /* ============================================================

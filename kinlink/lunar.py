@@ -194,29 +194,48 @@ def _ymd(s):
 
 
 _DATE_YMD_RE = re.compile(r"(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})")
+# 手打常見的其他寫法（2026-10-13 總幹事：一家人表格打 19600501、民國年都沒轉，長幼／農曆全算不出來）。
+# (樣式, 年份要加多少)：民國年＋1911。年只有一到三位數又帶月日的一律當民國（台灣沒人這樣寫西元年）。
+_DATE_INPUT_RES = (
+    (_DATE_YMD_RE, 0),                                                                   # 1960-05-01、1960/05/01
+    (re.compile(r"(\d{4})(\d{2})(\d{2})"), 0),                                           # 19600501
+    (re.compile(r"(\d{4})\s*年\s*(\d{1,2})\s*月\s*(\d{1,2})\s*日?"), 0),                  # 1960年5月1日
+    (re.compile(r"(?:民國|民)\s*(\d{1,3})\s*[年/.-]\s*(\d{1,2})\s*[月/.-]\s*(\d{1,2})\s*日?"), 1911),  # 民國49年5月1日
+    (re.compile(r"(\d{1,3})[-/.](\d{1,2})[-/.](\d{1,2})"), 1911),                        # 49/5/1、49.5.1
+    (re.compile(r"(\d{3})(\d{2})(\d{2})"), 1911),                                        # 0490501、1120921（民國七碼）
+)
+_YEAR_INPUT_RES = (
+    (re.compile(r"(\d{4})\s*年?"), 0),                                                    # 1928、1928年
+    (re.compile(r"(?:民國|民)\s*(\d{1,3})\s*年?"), 1911),                                 # 民國17年
+)
 _DATE_PARTS_RE = re.compile(r"(\d{4})(?:[-/.](\d{1,2})(?:[-/.](\d{1,2}))?)?")
 
 
 def normalize_date(s):
     """寫入用：生卒日期正規化成補零的 'YYYY-MM-DD'（H-2，2026-09-25）。
 
-    CSV 新增列／更新列、成員表單存檔都經這裡。接受 年-月-日、年/月/日、年.月.日，
+    CSV 新增列／更新列、成員表單、一家人表格存檔都經這裡。接受 年-月-日、年/月/日、年.月.日，
     月日一或兩位數，全形數字與分隔符也行（Excel 另存會把 1960-05-01 變 1960/5/1，
     表單手打常不補零）——不正規化的話，長幼、子女排序（比字串）與農曆換算全會錯。
-    只有四位數年份的維持年份（全形轉半形）；其他看不懂的文字（「不詳」、原文、
+    2026-10-13 起也認 19600501、1960年5月1日、民國49年5月1日、49/5/1、0490501（見 _DATE_INPUT_RES）。
+    只有年份的存成四位數西元年（1928、民國17年 → 1928）；其他看不懂的文字（「不詳」、原文、
     不存在的日期如 1960-02-30）原樣保留、不拒收，免得擋掉既有匯入。空值原樣回。
     """
     if s is None or s == "":
         return s
     t = str(s).strip().translate(_FW_DATE)
-    m = _DATE_YMD_RE.fullmatch(t)
-    if m:
-        try:
-            return datetime.date(*(int(x) for x in m.groups())).isoformat()
-        except ValueError:
-            return s
-    if re.fullmatch(r"\d{4}", t):
-        return t
+    for rx, add in _DATE_INPUT_RES:
+        m = rx.fullmatch(t)
+        if m:
+            y, mo, d = (int(x) for x in m.groups())
+            try:
+                return datetime.date(y + add, mo, d).isoformat()
+            except ValueError:
+                return s
+    for rx, add in _YEAR_INPUT_RES:
+        m = rx.fullmatch(t)
+        if m:
+            return "%04d" % (int(m.group(1)) + add)
     return s
 
 

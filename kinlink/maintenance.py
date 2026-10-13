@@ -590,6 +590,14 @@ def check_update() -> dict:
 
 
 _UPDATE_HOSTS = ("github.com", "githubusercontent.com")   # 更新檔只准從 GitHub 下載
+# 下載更新進度：畫面每秒問一次 GET /api/update/progress 顯示百分比
+# （2026-10-13 總幹事實測：14 MB 下載一分多鐘，只有灰按鈕看起來像卡住）。ponytail: 同時只會有一個下載
+_DL = {"got": 0, "want": 0}
+
+
+def update_progress() -> dict:
+    """GET /api/update/progress → {got, want}（bytes；want＝0＝還不知道總大小）。"""
+    return dict(_DL)
 
 
 def _old_exe_name(exe_name: str) -> str:
@@ -874,15 +882,18 @@ def download_update() -> dict:
                             "再開啟繫族按一次「下載更新」（目前的程式不受影響）。" % bad)
     newf = base / "繫族_new.exe"
     tmpf = base / "繫族_new.exe.part"
+    _DL.update(got=0, want=int(info.get("assetSize") or 0))
     req = urllib.request.Request(url, headers={"User-Agent": "KinLink-Updater"})
     try:
         with urllib.request.urlopen(req, timeout=60) as r, open(tmpf, "wb") as f:
             expect = int(r.headers.get("Content-Length") or 0)
+            _DL["want"] = _DL["want"] or expect
             while True:
                 chunk = r.read(65536)
                 if not chunk:
                     break
                 f.write(chunk)
+                _DL["got"] += len(chunk)
     except (OSError, http.client.HTTPException) as e:   # URLError／逾時／斷線都是 OSError；IncompleteRead 是 HTTPException
         tmpf.unlink(missing_ok=True)
         if isinstance(e, urllib.error.HTTPError):

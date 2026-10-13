@@ -2698,7 +2698,7 @@ window.createMemberPicker = function (opts) {
   function famRowChanged(r, v){
     var o = r.orig;
     return v.name !== o.name || v.styleName !== o.styleName || v.gender !== o.gender || v.birth !== o.birth ||
-           v.death !== o.death || (r.kind === 'kid' && v.other !== o.other) || (r.kind === 'spouse' && v.status !== o.status);
+           v.death !== o.death || (r.kind === 'kid' && !r.otherLocked && v.other !== o.other) || (r.kind === 'spouse' && v.status !== o.status);
   }
   function famDirty(){
     if(!fam) return false;
@@ -2712,6 +2712,7 @@ window.createMemberPicker = function (opts) {
   function famKidLabel(r, counters){
     var g = r.d.gender;
     if(r.origLabel) return r.origLabel;
+    if(r.otherLocked) return g === 'F' ? '過繼女' : (g === 'M' ? '過繼子' : '過繼');
     if(g !== 'M' && g !== 'F') return '子女';
     counters[g] = (counters[g] || 0) + 1;
     if(r.rankKnown === false) return g === 'M' ? '子' : '女';
@@ -2754,7 +2755,9 @@ window.createMemberPicker = function (opts) {
           return '<option value="' + s + '"' + ((r.status || 'MARRIED') === s ? ' selected' : '') + '>' + STATUS_LABEL[s] + '</option>';
         }).join('') + '</select>';
     } else if(r.kind === 'kid' || r.kind === 'newKid'){
-      last = '<select class="select fam-in" data-k="' + k + '" data-f="other" aria-label="' + famOtherWord() + '"' + dis + '>' +
+      // 本人跟這位子女是過繼／收養：表上不改生母（選了會被記成親生、把本生母擠掉），請走完整資料
+      var lock = r.otherLocked ? ' disabled title="過繼／收養的子女：生母請按「完整資料」登錄"' : '';
+      last = '<select class="select fam-in" data-k="' + k + '" data-f="other" aria-label="' + famOtherWord() + '"' + (dis || lock) + '>' +
         famOtherOptions(r) + '</select>';
     }
     var act = famIsNew(r)
@@ -2825,7 +2828,9 @@ window.createMemberPicker = function (opts) {
     return o;
   }
   function openFamily(id, addKid){
-    return window.KinAPI.getMember(id).then(function(self){
+    var lockBranch = '';
+    return window.KinAPI.getState().then(function(st){ lockBranch = (st && st.editMode && st.branch) || ''; },
+                                          function(){}).then(function(){ return window.KinAPI.getMember(id); }).then(function(self){
       if(!self) throw new Error('查無此成員');
       var sps = (self.spouses || []).filter(function(s){ return s && s.id; });
       var kids = self.children || [];
@@ -2850,22 +2855,31 @@ window.createMemberPicker = function (opts) {
                    (!selfSlot || p.relation === (selfSlot === 'M' ? '母' : '父'));
           })[0];
           var op = bio ? String(bio.id) : '';
+          var selfEdge = (d.parents || []).filter(function(p){ return String(p.id) === String(self.id); });
+          var adopted = !!byId[c.id] && selfEdge.length > 0 && !selfEdge.some(function(p){
+            return (p.relationType || 'BIOLOGICAL') === 'BIOLOGICAL'; });
           rows.push({ key: 'c' + c.id, kind: 'kid', d: d, ro: !byId[c.id], origLabel: c.origLabel || '',
-                      rankKnown: c.rankKnown, other: op, otherName: bio ? bio.name : '', orig: famOrig(d, { other: op }) });
+                      rankKnown: c.rankKnown, other: op, otherName: bio ? bio.name : '', otherLocked: adopted,
+                      orig: famOrig(d, { other: op }) });
         });
-        fam = { self: self, rows: rows, seq: 0 };
+        fam = { self: self, rows: rows, seq: 0,
+                locked: !!lockBranch && (self.branch || '') !== lockBranch, lockBranch: lockBranch };
         if(famTitle) famTitle.textContent = (self.name || '') + ' 一家';
         if(famSub) famSub.textContent = [self.gen ? '第' + genCn(self.gen) + '世' : '', self.branch || '',
           self.fatherName ? '父 ' + self.fatherName : ''].filter(Boolean).join('・') +
-          (self.gen ? '　子女為第' + genCn(self.gen + 1) + '世' : '');
+          (self.gen ? '　子女為第' + genCn(self.gen + 1) + '世' : '') +
+          (fam.locked ? '　（目前只能編輯「' + fam.lockBranch + '」，這一家不能加人）' : '');
         if(famOtherHead) famOtherHead.textContent = famOtherWord() + '（子女）／婚姻（配偶）';
         if(famBody) famBody.innerHTML = '';
         famRender();
-        if(addKid) famAddKid(true);
+        if(addKid && !fam.locked) famAddKid(true);
+        famBusy(false);
         famMask.hidden = false;
+        return true;
       });
     }).catch(function(err){
       if(typeof toast === 'function') toast('讀取這一家失敗：' + (err && err.message ? err.message : ''), 'err');
+      return false;
     });
   }
   function closeFamily(force){
@@ -2877,7 +2891,9 @@ window.createMemberPicker = function (opts) {
   }
   function famDeath(v){ return v === '歿' || v === DEATH_UNKNOWN ? DEATH_UNKNOWN : v; }
   function famBusy(on){
-    [famSaveBtn, famAddKidBtn, famAddSpBtn].forEach(function(b){ if(b) b.disabled = on; });
+    var cancel = document.getElementById('fam-cancel');
+    [famSaveBtn, cancel].forEach(function(b){ if(b) b.disabled = on; });            // 存檔中不能取消（存完會重讀、表又彈回來）
+    [famAddKidBtn, famAddSpBtn].forEach(function(b){ if(b) b.disabled = on || !!(fam && fam.locked); });
   }
   function famMark(r, f){
     var el = famBody.querySelector('[data-k="' + r.key + '"][data-f="' + f + '"]');
@@ -2897,7 +2913,7 @@ window.createMemberPicker = function (opts) {
     if(noName.length) problems.push('有一列沒填姓名：請補上，或按那一列的「移除」');
     // 2) 要接子女（新子女、改生母）時，本人一定要有性別，否則後端分不出父槽母槽、子女會接不上變孤兒
     var kidLinks = rows.filter(function(r){
-      return (r.kind === 'newKid' && famHasInput(r.v)) || (r.kind === 'kid' && !r.ro && r.v.other !== r.orig.other);
+      return (r.kind === 'newKid' && famHasInput(r.v)) || (r.kind === 'kid' && !r.ro && !r.otherLocked && r.v.other !== r.orig.other);
     });
     if(kidLinks.length && !selfSlot){
       famMark(rows[0], 'gender');
@@ -2929,8 +2945,11 @@ window.createMemberPicker = function (opts) {
       });
     }
     // 建了人、關係卻沒接上：把剛建的人刪掉，不留孤兒（使用者重做也不會多一筆重複的人）
-    function undoNew(id, err){
-      return window.KinAPI.deleteMember(id).catch(function(){}).then(function(){ throw err; });
+    function undoNew(id, name, err){
+      return window.KinAPI.deleteMember(id).then(function(){ throw err; }, function(){
+        var msg = err && err.message ? String(err.message).replace(/^API \d+：/, '') : '';
+        throw new Error(msg + '；剛建立的「' + name + '」也沒刪掉，請在族譜找到他補上父母或刪除');
+      });
     }
     rows.forEach(function(r){
       var v = r.v, o = r.orig;
@@ -2963,7 +2982,7 @@ window.createMemberPicker = function (opts) {
           if(!res || !res.id) throw new Error('建立失敗');
           return window.KinAPI.addSpouse(self.id, res.id, v.status || 'MARRIED').then(function(){
             newIds['new:' + r.key] = res.id;
-          }, function(err){ return undoNew(res.id, err); });
+          }, function(err){ return undoNew(res.id, v.name, err); });
         });
       });
     });
@@ -2973,7 +2992,7 @@ window.createMemberPicker = function (opts) {
     }
     rows.forEach(function(r){
       var v = r.v;
-      if(r.kind === 'kid' && !r.ro && v.other !== r.orig.other){
+      if(r.kind === 'kid' && !r.ro && !r.otherLocked && v.other !== r.orig.other){   // 過繼／收養的子女：存檔時再擋一次
         step('「' + v.name + '」的' + famOtherWord(), function(){
           // 改成另一位：直接加（後端同型別同槽自動取代舊的那條），失敗時舊的還在；選「未登錄」才刪
           if(!v.other) return window.KinAPI.removeParent(r.d.id, Number(r.orig.other), 'BIOLOGICAL');
@@ -2993,7 +3012,7 @@ window.createMemberPicker = function (opts) {
                 throw new Error('已建好並接上本人，但' + famOtherWord() + '沒接上：' +
                                 (err && err.message ? String(err.message).replace(/^API \d+：/, '') : ''));
               }) : null;
-            }, function(err){ return undoNew(res.id, err); });
+            }, function(err){ return undoNew(res.id, v.name, err); });
           });
         });
       }
@@ -3005,7 +3024,10 @@ window.createMemberPicker = function (opts) {
         else toast((done ? '這一家已儲存' : '沒有要儲存的修改') + (notes.length ? '。' + notes.join('；') : ''), notes.length ? 'err' : 'ok');
       }
       locateInTree(self.id);                       // 族譜重載、選回本人
-      return openFamily(self.id).then(function(){ return !failed.length; });   // 表格換成存好的樣子
+      return openFamily(self.id).then(function(read){                         // 表格換成存好的樣子
+        if(!read) closeFamily(true);               // 重讀失敗：關表（舊表的新增列還在，再按一次會重建）
+        return read && !failed.length;
+      });
     }).then(function(ok){ famBusy(false); return ok; }, function(err){ famBusy(false); throw err; });
   }
   if(famMask){
@@ -3042,7 +3064,7 @@ window.createMemberPicker = function (opts) {
         famBody.querySelectorAll('[data-f="other"]').forEach(function(sel){
           var row = famRowByKey(sel.getAttribute('data-k'));
           var cur = sel.value;
-          if(row){ row.other = cur; sel.innerHTML = famOtherOptions(row); sel.value = cur; }
+          if(row){ sel.innerHTML = famOtherOptions(row); sel.value = cur; }   // 不改 row.other：移除新配偶時退回原本的
         });
       }
     });
@@ -3056,6 +3078,7 @@ window.createMemberPicker = function (opts) {
   }
   if(mdFamily) mdFamily.addEventListener('click', function(){ famOpenFromDetail(false); });
   if(mdAddChild) mdAddChild.addEventListener('click', function(){ famOpenFromDetail(true); });
+  // 房頭鎖定時「＋新增子女」打開別房的一家：表上會寫明不能加人（openFamily 依 getState 判斷）
   // 從「完整資料」改完回來：表格重讀，顯示剛存好的樣子（表上有沒存的修改就不重讀，免得蓋掉）
   function famRefreshAfterForm(){
     if(fam && famMask && !famMask.hidden && !famDirty()){

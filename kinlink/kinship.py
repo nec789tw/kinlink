@@ -576,11 +576,10 @@ def _kin_bridge(conn, A, B) -> dict | None:
     if mb and mb["id"] != A["id"]:
         r = _kin_blood(conn, A, mb)
         if r and r.get("guessed"):
-            # 我與其母同輩（長幼不明）→ 外甥／舅舅、阿姨本就不分長幼。
-            # 含母親的堂、族兄弟姊妹（口語堂舅、堂姨也稱舅舅、阿姨），維持 0.2.1 的行為：
-            # 2026-10-02 曾改成只限同胞，用真實庫比對發現 28/5000 對既有的舅舅、阿姨掉成族親，已還原。
-            # 生年齊全時同一批人反而算成族親，是另一個待總幹事決定用詞的已知不一致（見規格 §2.2）。
-            if r.get("sameGen"):
+            # 我是其母的同胞手足（長幼不明）→ 外甥／舅舅、阿姨本就不分長幼。
+            # 母親的堂、族兄弟姊妹一律族親（D-3 總幹事 2026-10-13 拍板：族譜照父系記，
+            # 母親那邊的堂、族親不另立稱呼；生年齊全時本來就是族親，現在兩種情況一致）。
+            if r.get("sameGen") and r.get("sibling"):
                 return {"forward": "外甥" if g_b == "M" else "外甥女",
                         "backward": "舅舅" if g_a == "M" else "阿姨",
                         "path": "經母親「%s」橋接：%s" % (mb["name"], r["path"])}
@@ -597,7 +596,7 @@ def _kin_bridge(conn, A, B) -> dict | None:
     if ma and ma["id"] != B["id"]:
         r = _kin_blood(conn, ma, B)
         if r and r.get("guessed"):
-            if r.get("sameGen"):   # 母與目標同輩（長幼不明）→ 舅舅／阿姨、外甥不分長幼（同上，含堂、族）
+            if r.get("sameGen") and r.get("sibling"):   # 目標是母親的同胞手足（長幼不明）→ 舅舅／阿姨（堂、族一律族親，同上）
                 return {"forward": "舅舅" if g_b == "M" else "阿姨",
                         "backward": "外甥" if g_a == "M" else "外甥女",
                         "path": "經母親「%s」橋接：%s" % (ma["name"], r["path"])}

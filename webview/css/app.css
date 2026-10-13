@@ -424,6 +424,8 @@ button { font-family:inherit; }
 /* ── 親屬關係管理（成員編輯表單）與詳情卡關係列 ──
    只用既有 token（--line/--panel-2/--muted/--faint/--accent-strong），不寫死色碼 */
 .rel-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+/* 「新增子女」且父／母有兩位以上配偶：點選生母（生父）的快捷鈕 */
+.rel-hint { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:-2px 0 8px; font-size:13px; color:var(--muted); }
 .rel-row { display:flex; align-items:center; gap:8px; padding:6px 10px;
   border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
 .rel-row .rel-kind { font-size:13px; color:var(--muted); flex:none; }

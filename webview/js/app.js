@@ -1018,6 +1018,8 @@ window.createMemberPicker = function (opts) {
   function renderDetail(m){
     curSel = m;                          // 記住目前選取者，供「編輯」鈕開表單
     if(mdEdit) mdEdit.disabled = false;  // 有選取成員後才可按（未選人維持 disabled）
+    var addKid = document.getElementById('tree-md-addchild');
+    if(addKid) addKid.hidden = false;
     mdAva.className = 'ava' + (isF(m)?' f':'') + (m.alive?'':' past');
     mdAva.textContent = avatarChar(m);
     mdNm.innerHTML = esc(m.name) + (!blank(m.styleName)?' <span class="style-name">字 '+esc(m.styleName)+'</span>':'');
@@ -2066,7 +2068,9 @@ window.createMemberPicker = function (opts) {
   var parentPick = (window.createMemberPicker && mfParentMount)
     ? window.createMemberPicker({
         placeholder: '搜尋姓名、字號或房頭…',
-        onSelect: function(){},
+        // 點了人名就加入（2026-10-13 總幹事：視窗常常消失、建子女不直覺——舊版選了還要再按「＋加父/母」，
+        // 沒按就存檔，孩子沒掛到父母底下、跑到族譜最上層，像是不見了）
+        onSelect: function(m){ if(m && mfParentAddBtn) mfParentAddBtn.click(); },
         allowCreate: [
           { key: 'M', label: '＋ 建立新成員「{name}」（父）' },
           { key: 'F', label: '＋ 建立新成員「{name}」（母）' }
@@ -2078,7 +2082,7 @@ window.createMemberPicker = function (opts) {
   var spousePick = (window.createMemberPicker && mfSpouseMount)
     ? window.createMemberPicker({
         placeholder: '搜尋姓名、字號或房頭…',
-        onSelect: function(){},
+        onSelect: function(m){ if(m && mfSpouseAddBtn) mfSpouseAddBtn.click(); },   // 同上：點了就加入
         allowCreate: true,
         onCreate: function(name){ createAndAddSpouse(name); }
       })
@@ -2119,6 +2123,7 @@ window.createMemberPicker = function (opts) {
 
   function renderRelParents(){
     if(!mfParentsList) return;
+    renderMotherHint();
     if(!relParents.length){
       mfParentsList.innerHTML = '<div class="rel-empty">尚未設定父母（始遷祖或資料待補可留空）</div>';
       return;
@@ -2503,6 +2508,8 @@ window.createMemberPicker = function (opts) {
 
   function openMemberForm(detail){
     if(!mformMask) return;
+    childOf = null;                                   // 「新增子女」狀態由 openChildForm 另外設
+    if(mfAgain) mfAgain.hidden = true;
     mformId    = detail ? detail.id : null;
     mformRelTouched = false;
     mformName0 = detail ? (detail.name || '') : '';
@@ -2612,9 +2619,8 @@ window.createMemberPicker = function (opts) {
   }
 
   if(mfCancel) mfCancel.addEventListener('click', maybeCloseMemberForm);
-  if(mformMask){
-    mformMask.addEventListener('click', function(e){ if(e.target === mformMask) maybeCloseMemberForm(); });
-  }
+  // 點表單外的灰色遮罩不關表單（2026-10-13 總幹事：新建修改時視窗常常消失）——只有「取消」才關，
+  // 「取消」照舊有守門（改過先問）。2026-08-03 那版是點遮罩先問，仍常被一路按確定關掉。
   // 退出編輯模式時自動收起表單（守住編輯鎖行為）
   window.KinAPI.on('lock/changed', function(st){
     if(!(st && st.editMode)) closeMemberFormAndRefresh();
@@ -2633,6 +2639,63 @@ window.createMemberPicker = function (opts) {
       });
     });
   }
+
+  /* ── 「＋新增子女」（2026-10-13 總幹事：要建子女，現在不夠直覺）────────────
+     從某人的詳情卡開：表單帶好他（父或母）、世代＝他的下一世、房頭＝他的房頭；
+     他只有一位配偶就一併帶成另一位親生父母，兩位以上就列出來點選生母（生父）。
+     都是新增表單的暫存列，看得到、可「移除」；存檔時跟一般新增一樣逐筆補送。 */
+  var childOf = null;
+  var mfAgain = document.getElementById('mform-save-again');
+  var mfMotherHint = document.getElementById('mform-mother-hint');
+  var mdAddChild = document.getElementById('tree-md-addchild');
+  function otherSlot(p){ return p && p.gender === 'M' ? '母' : (p && p.gender === 'F' ? '父' : ''); }
+  function renderMotherHint(){
+    if(!mfMotherHint) return;
+    var p = childOf, slot = otherSlot(p), sps = (p && p.spouses || []).filter(function(s){ return s && s.id; });
+    var has = relParents.some(function(r){ return r.relation === slot && (r.relationType || 'BIOLOGICAL') === 'BIOLOGICAL'; });
+    if(mformId || !p || !slot || sps.length < 2 || has){ mfMotherHint.hidden = true; mfMotherHint.innerHTML = ''; return; }
+    mfMotherHint.innerHTML = '<span>' + (slot === '母' ? '生母是哪一位？' : '生父是哪一位？') + '</span>' +
+      sps.map(function(s, i){
+        return '<button type="button" class="btn btn-ghost btn-sm" data-mother="' + i + '">' + esc(s.name) + '</button>';
+      }).join('');
+    mfMotherHint.hidden = false;
+  }
+  if(mfMotherHint) mfMotherHint.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('[data-mother]') : null;
+    if(!b || !childOf) return;
+    var s = (childOf.spouses || []).filter(function(x){ return x && x.id; })[Number(b.getAttribute('data-mother'))];
+    if(!s) return;
+    relParents.push({ id: s.id, name: s.name, relation: otherSlot(childOf), relationType: 'BIOLOGICAL' });
+    renderRelParents();
+  });
+  function openChildForm(p){
+    openMemberForm(null);
+    childOf = p;
+    if(mformTitle) mformTitle.textContent = '新增「' + (p.name || '') + '」的子女';
+    var gen = parseInt(p.gen, 10);
+    mfGen.value = gen > 0 ? gen + 1 : '';
+    fillBranchSelect(p.branch || '');
+    relParents = [{ id: p.id, name: p.name, relation: p.gender === 'F' ? '母' : '父', relationType: 'BIOLOGICAL' }];
+    var sps = (p.spouses || []).filter(function(s){ return s && s.id; });
+    if(sps.length === 1 && otherSlot(p))
+      relParents.push({ id: sps[0].id, name: sps[0].name, relation: otherSlot(p), relationType: 'BIOLOGICAL' });
+    renderRelParents();
+    if(mfAgain) mfAgain.hidden = false;
+    mformSnap = mformState();   // 帶好的父母、世代不算「改過」：沒填就按取消不多問
+  }
+  if(mdAddChild){
+    mdAddChild.addEventListener('click', function(){
+      if(!curSel) return;
+      window.requireEdit(function(){
+        if(!curSel) return;
+        window.KinAPI.getMember(curSel.id).then(function(d){ openChildForm(d || curSel); })
+          .catch(function(){ openChildForm(curSel); });
+      });
+    });
+  }
+  // 3) 儲存，再新增一位：存好後用同一位父／母再開一張（父母、世代、房頭照帶）
+  var saveAgain = false;
+  if(mfAgain) mfAgain.addEventListener('click', function(){ saveAgain = true; mfSave.click(); });
 
   // 「新增成員」接同一表單（空白），存檔後定位到新成員（常駐可見＋requireEdit）
   if(addBtn){
@@ -2675,6 +2738,8 @@ window.createMemberPicker = function (opts) {
         // 父母／配偶改由「親屬關係」區維護（addParent/addSpouse），不再傳 fatherId
       };
       if(wasEdit) payload.id = mformId;
+      var again = saveAgain, ctx = childOf;
+      saveAgain = false;
       mfSave.disabled = true;
       var relFailed = [];
       window.KinAPI.saveMember(payload).then(function(res){
@@ -2696,6 +2761,7 @@ window.createMemberPicker = function (opts) {
         }
         if(newId) locateInTree(newId);            // 重載全樹、展開祖先鏈並選取該人
         else load(branchEl.value, searchEl.value.trim());
+        if(again && ctx && !relFailed.length) openChildForm(ctx);   // 「儲存，再新增一位」
       }).catch(function(err){
         mfSave.disabled = false;
         var msg = err && err.message ? String(err.message).replace(/^API \d+：/, '') : '';
@@ -2720,6 +2786,8 @@ window.createMemberPicker = function (opts) {
         // 清空詳情卡並重載列表
         curSel = null;
         if(mdEdit) mdEdit.disabled = true;   // 未選人：維持 disabled（仍可見）
+        var addKid = document.getElementById('tree-md-addchild');
+        if(addKid) addKid.hidden = true;
         mdAva.className = 'ava';
         mdAva.textContent = '—';
         mdNm.textContent = '—';

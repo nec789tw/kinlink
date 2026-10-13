@@ -139,7 +139,8 @@
                   </button>
                 </div>
                 <!-- 選了有子孫的人才出現：把他底下的子孫一次展開（列表、樹狀圖都可用） -->
-                <div class="md-actions"><button type="button" id="tree-md-expand" class="btn btn-ghost btn-sm" hidden>展開這一支</button></div>
+                <!-- 「＋新增子女」選了人才出現（2026-10-13 總幹事：建子女要直覺）：表單帶好父母、世代、房頭 -->
+                <div class="md-actions"><button type="button" id="tree-md-addchild" class="btn btn-ghost btn-sm locked-hint" hidden>＋新增子女</button><button type="button" id="tree-md-expand" class="btn btn-ghost btn-sm" hidden>展開這一支</button></div>
                 <div class="md-grid" id="tree-md-grid"></div>
               </div>
             </div>
@@ -954,8 +955,9 @@
            編輯既有成員時增刪即時生效；新增成員時先暫存，按「儲存」後一併寫入。 -->
       <div class="mform-sec">親屬關係</div>
       <div class="field">
-        <div class="lbl">父母（親生與過繼／收養可並存；留空＝無父母，如始遷祖）</div>
+        <div class="lbl">父母（親生與過繼／收養可並存；留空＝無父母，如始遷祖）。先選關係類型，再搜尋人名，點了就加入</div>
         <div id="mform-parents" class="rel-list"></div>
+        <div id="mform-mother-hint" class="rel-hint" hidden></div>
         <div class="rel-add">
           <div id="mform-parent-pick" class="rel-pick"></div>
           <select id="mform-parent-type" class="select" aria-label="親子關係型別">
@@ -963,12 +965,13 @@
             <option value="ADOPTED">過繼</option>
             <option value="FOSTER">收養</option>
           </select>
-          <button type="button" class="btn btn-ghost" id="mform-parent-add-btn">＋加父/母</button>
+          <!-- 點選人名就加入（2026-10-13）；這顆鈕留著給程式呼叫，畫面上不顯示 -->
+          <button type="button" class="btn btn-ghost" id="mform-parent-add-btn" hidden>＋加父/母</button>
         </div>
       </div>
 
       <div class="field">
-        <div class="lbl">配偶</div>
+        <div class="lbl">配偶（先選婚姻狀態，再搜尋人名，點了就加入）</div>
         <div id="mform-spouses" class="rel-list"></div>
         <div class="rel-add">
           <div id="mform-spouse-pick" class="rel-pick"></div>
@@ -978,7 +981,7 @@
             <option value="DIVORCED">離異</option>
             <option value="SEPARATED">分居</option>
           </select>
-          <button type="button" class="btn btn-ghost" id="mform-spouse-add-btn">＋加配偶</button>
+          <button type="button" class="btn btn-ghost" id="mform-spouse-add-btn" hidden>＋加配偶</button>
         </div>
       </div>
 
@@ -1073,6 +1076,8 @@
 
       <div class="acts">
         <button type="button" class="btn btn-ghost" id="mform-cancel">取消</button>
+        <!-- 只有「新增子女」時出現：存好這一位，接著開下一位（父母、世代、房頭照帶） -->
+        <button type="button" class="btn btn-ghost" id="mform-save-again" hidden>儲存，再新增一位</button>
         <button type="button" class="btn btn-primary" id="mform-save">儲存</button>
       </div>
       <!-- 僅編輯既有成員時顯示；點擊需雙重確認 -->

@@ -139,8 +139,8 @@
                   </button>
                 </div>
                 <!-- 選了有子孫的人才出現：把他底下的子孫一次展開（列表、樹狀圖都可用） -->
-                <!-- 「＋新增子女」選了人才出現（2026-10-13 總幹事：建子女要直覺）：表單帶好父母、世代、房頭 -->
-                <div class="md-actions"><button type="button" id="tree-md-addchild" class="btn btn-ghost btn-sm locked-hint" hidden>＋新增子女</button><button type="button" id="tree-md-expand" class="btn btn-ghost btn-sm" hidden>展開這一支</button></div>
+                <!-- 「一家人」「＋新增子女」選了人才出現（2026-10-13 總幹事選 A）：本人、配偶、子女一張表編輯 -->
+                <div class="md-actions"><button type="button" id="tree-md-family" class="btn btn-ghost btn-sm locked-hint" hidden>一家人</button><button type="button" id="tree-md-addchild" class="btn btn-ghost btn-sm locked-hint" hidden>＋新增子女</button><button type="button" id="tree-md-expand" class="btn btn-ghost btn-sm" hidden>展開這一支</button></div>
                 <div class="md-grid" id="tree-md-grid"></div>
               </div>
             </div>
@@ -911,6 +911,31 @@
   </div>
 
   <!-- 成員編輯表單：由族譜頁「編輯」／「新增成員」開啟，走 KinAPI.saveMember / deleteMember -->
+  <!-- 一家人一張表（2026-10-13 總幹事選 A）：本人、配偶、子女攤成一張表編輯，像全家族表。
+       放在成員表單之前：表上按「完整資料」打開的成員表單會蓋在它上面。只有「取消」「儲存」會關。 -->
+  <div class="modal-mask" id="fam-mask" hidden>
+    <div class="modal modal-fam" role="dialog" aria-modal="true" aria-labelledby="fam-title">
+      <h3 id="fam-title">一家</h3>
+      <div class="sub" id="fam-sub"></div>
+      <div class="sub">改好按「儲存」一起存。出生、過世填年份或完整日期都可以；在世的過世欄留空，不知年份填「已歿」。
+        電話、地址、安葬、原文日期等細節按「完整資料」。</div>
+      <div class="fam-scroll">
+        <table class="ntc-table fam-table">
+          <colgroup><col style="width:9%"><col style="width:15%"><col style="width:10%"><col style="width:8%"><col style="width:15%"><col style="width:12%"><col style="width:18%"><col style="width:13%"></colgroup>
+          <thead><tr><th>關係</th><th>姓名＊</th><th>字號</th><th>性別</th><th>出生</th><th>過世</th><th id="fam-other-head">生母（子女）／婚姻（配偶）</th><th></th></tr></thead>
+          <tbody id="fam-body"></tbody>
+        </table>
+      </div>
+      <div class="controls fam-acts">
+        <button type="button" class="btn btn-sm" id="fam-add-kid">＋ 再加一位子女</button>
+        <button type="button" class="btn btn-sm" id="fam-add-spouse">＋ 加配偶</button>
+        <div class="sp"></div>
+        <button type="button" class="btn btn-ghost" id="fam-cancel">取消</button>
+        <button type="button" class="btn btn-primary" id="fam-save">儲存</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-mask" id="mform-mask" hidden>
     <div class="modal modal-lg">
       <h3 id="mform-title">編輯成員</h3>
@@ -957,7 +982,6 @@
       <div class="field">
         <div class="lbl">父母（親生與過繼／收養可並存；留空＝無父母，如始遷祖）。先選關係類型，再搜尋人名，點了就加入</div>
         <div id="mform-parents" class="rel-list"></div>
-        <div id="mform-mother-hint" class="rel-hint" hidden></div>
         <div class="rel-add">
           <div id="mform-parent-pick" class="rel-pick"></div>
           <select id="mform-parent-type" class="select" aria-label="親子關係型別">
@@ -1076,8 +1100,6 @@
 
       <div class="acts">
         <button type="button" class="btn btn-ghost" id="mform-cancel">取消</button>
-        <!-- 只有「新增子女」時出現：存好這一位，接著開下一位（父母、世代、房頭照帶） -->
-        <button type="button" class="btn btn-ghost" id="mform-save-again" hidden>儲存，再新增一位</button>
         <button type="button" class="btn btn-primary" id="mform-save">儲存</button>
       </div>
       <!-- 僅編輯既有成員時顯示；點擊需雙重確認 -->

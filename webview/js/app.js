@@ -1018,8 +1018,8 @@ window.createMemberPicker = function (opts) {
   function renderDetail(m){
     curSel = m;                          // 記住目前選取者，供「編輯」鈕開表單
     if(mdEdit) mdEdit.disabled = false;  // 有選取成員後才可按（未選人維持 disabled）
-    var addKid = document.getElementById('tree-md-addchild');
-    if(addKid) addKid.hidden = false;
+    ['tree-md-family', 'tree-md-addchild'].forEach(function(bid){   // 「一家人」「＋新增子女」選了人才出現
+      var b = document.getElementById(bid); if(b) b.hidden = false; });
     mdAva.className = 'ava' + (isF(m)?' f':'') + (m.alive?'':' past');
     mdAva.textContent = avatarChar(m);
     mdNm.innerHTML = esc(m.name) + (!blank(m.styleName)?' <span class="style-name">字 '+esc(m.styleName)+'</span>':'');
@@ -2123,7 +2123,6 @@ window.createMemberPicker = function (opts) {
 
   function renderRelParents(){
     if(!mfParentsList) return;
-    renderMotherHint();
     if(!relParents.length){
       mfParentsList.innerHTML = '<div class="rel-empty">尚未設定父母（始遷祖或資料待補可留空）</div>';
       return;
@@ -2508,8 +2507,6 @@ window.createMemberPicker = function (opts) {
 
   function openMemberForm(detail){
     if(!mformMask) return;
-    childOf = null;                                   // 「新增子女」狀態由 openChildForm 另外設
-    if(mfAgain) mfAgain.hidden = true;
     mformId    = detail ? detail.id : null;
     mformRelTouched = false;
     mformName0 = detail ? (detail.name || '') : '';
@@ -2562,6 +2559,7 @@ window.createMemberPicker = function (opts) {
   function closeMemberForm(){
     var touchedId = mformRelTouched ? mformId : null;
     if(mformMask) mformMask.hidden = true;
+    famRefreshAfterForm();   // 從「一家人」表格按「完整資料」來的：表格重讀
     mformId = null;
     mformRelTouched = false;
     return touchedId;
@@ -2640,62 +2638,339 @@ window.createMemberPicker = function (opts) {
     });
   }
 
-  /* ── 「＋新增子女」（2026-10-13 總幹事：要建子女，現在不夠直覺）────────────
-     從某人的詳情卡開：表單帶好他（父或母）、世代＝他的下一世、房頭＝他的房頭；
-     他只有一位配偶就一併帶成另一位親生父母，兩位以上就列出來點選生母（生父）。
-     都是新增表單的暫存列，看得到、可「移除」；存檔時跟一般新增一樣逐筆補送。 */
-  var childOf = null;
-  var mfAgain = document.getElementById('mform-save-again');
-  var mfMotherHint = document.getElementById('mform-mother-hint');
-  var mdAddChild = document.getElementById('tree-md-addchild');
-  function otherSlot(p){ return p && p.gender === 'M' ? '母' : (p && p.gender === 'F' ? '父' : ''); }
-  function renderMotherHint(){
-    if(!mfMotherHint) return;
-    var p = childOf, slot = otherSlot(p), sps = (p && p.spouses || []).filter(function(s){ return s && s.id; });
-    var has = relParents.some(function(r){ return r.relation === slot && (r.relationType || 'BIOLOGICAL') === 'BIOLOGICAL'; });
-    if(mformId || !p || !slot || sps.length < 2 || has){ mfMotherHint.hidden = true; mfMotherHint.innerHTML = ''; return; }
-    mfMotherHint.innerHTML = '<span>' + (slot === '母' ? '生母是哪一位？' : '生父是哪一位？') + '</span>' +
-      sps.map(function(s, i){
-        return '<button type="button" class="btn btn-ghost btn-sm" data-mother="' + i + '">' + esc(s.name) + '</button>';
-      }).join('');
-    mfMotherHint.hidden = false;
+  /* ── 一家人一張表（2026-10-13 總幹事：新建的 UI/UX 推倒重來、大刀闊斧；選 A）──────────────
+     以「一家人」為單位編輯：本人、配偶、子女攤成一張表（像全家族表）。姓名、字號、性別、出生、過世直接在表上改；
+     子女列選生母（本人是女性時選生父）；「＋再加一位子女」多填幾列，最後「儲存」一起存。
+     電話、地址、安葬、原文日期等細節按「完整資料」開原本的成員表單。
+     儲存只送改過的格子（後端 save_member 只更新有送的欄位，沒送的不動）；只有「取消」「儲存」會關這張表。 */
+  var famMask = document.getElementById('fam-mask');
+  var famTitle = document.getElementById('fam-title'), famSub = document.getElementById('fam-sub');
+  var famBody = document.getElementById('fam-body'), famOtherHead = document.getElementById('fam-other-head');
+  var famSaveBtn = document.getElementById('fam-save');
+  var mdFamily = document.getElementById('tree-md-family'), mdAddChild = document.getElementById('tree-md-addchild');
+  var fam = null;          // { self, rows:[{key, kind, rel, d, orig, other, otherType, status}], seq }
+  var FAM_ORD = '長次三四五六七八九十';
+  function famOtherWord(){ return fam && fam.self.gender === 'F' ? '生父' : '生母'; }
+  var STATUS_LABEL = { MARRIED: '婚姻中', WIDOWED: '喪偶', DIVORCED: '離異', SEPARATED: '分居' };
+
+  function famVal(key, f){
+    var el = famBody ? famBody.querySelector('[data-k="' + key + '"][data-f="' + f + '"]') : null;
+    return el ? String(el.value || '').trim() : '';
   }
-  if(mfMotherHint) mfMotherHint.addEventListener('click', function(e){
-    var b = e.target.closest ? e.target.closest('[data-mother]') : null;
-    if(!b || !childOf) return;
-    var s = (childOf.spouses || []).filter(function(x){ return x && x.id; })[Number(b.getAttribute('data-mother'))];
-    if(!s) return;
-    relParents.push({ id: s.id, name: s.name, relation: otherSlot(childOf), relationType: 'BIOLOGICAL' });
-    renderRelParents();
-  });
-  function openChildForm(p){
-    openMemberForm(null);
-    childOf = p;
-    if(mformTitle) mformTitle.textContent = '新增「' + (p.name || '') + '」的子女';
-    var gen = parseInt(p.gen, 10);
-    mfGen.value = gen > 0 ? gen + 1 : '';
-    fillBranchSelect(p.branch || '');
-    relParents = [{ id: p.id, name: p.name, relation: p.gender === 'F' ? '母' : '父', relationType: 'BIOLOGICAL' }];
-    var sps = (p.spouses || []).filter(function(s){ return s && s.id; });
-    if(sps.length === 1 && otherSlot(p))
-      relParents.push({ id: sps[0].id, name: sps[0].name, relation: otherSlot(p), relationType: 'BIOLOGICAL' });
-    renderRelParents();
-    if(mfAgain) mfAgain.hidden = false;
-    mformSnap = mformState();   // 帶好的父母、世代不算「改過」：沒填就按取消不多問
+  function famRowVals(r){
+    return { name: famVal(r.key, 'name'), styleName: famVal(r.key, 'styleName'), gender: famVal(r.key, 'gender'),
+             birth: famVal(r.key, 'birth'), death: famVal(r.key, 'death'),
+             other: famVal(r.key, 'other'), status: famVal(r.key, 'status') };
   }
-  if(mdAddChild){
-    mdAddChild.addEventListener('click', function(){
-      if(!curSel) return;
-      window.requireEdit(function(){
-        if(!curSel) return;
-        window.KinAPI.getMember(curSel.id).then(function(d){ openChildForm(d || curSel); })
-          .catch(function(){ openChildForm(curSel); });
+  function famIsNew(r){ return r.kind === 'newKid' || r.kind === 'newSpouse'; }
+  function famHasInput(v){ return !!(v.name || v.styleName || v.birth || v.death); }
+  function famDirty(){
+    if(!fam) return false;
+    return fam.rows.some(function(r){
+      var v = famRowVals(r);
+      if(famIsNew(r)) return famHasInput(v);
+      var o = r.orig;
+      return v.name !== o.name || v.styleName !== o.styleName || v.gender !== o.gender || v.birth !== o.birth ||
+             v.death !== o.death || (r.kind === 'kid' && v.other !== o.other) || (r.kind === 'spouse' && v.status !== o.status);
+    });
+  }
+  // 子女的「關係」欄：家族原表的稱呼優先（K-2），沒有就照排序算長男、次女；長幼排不出就寫子／女
+  function famKidLabel(r, counters){
+    var d = r.d, g = d.gender;
+    if(r.origLabel) return r.origLabel;
+    if(g !== 'M' && g !== 'F') return '子女';
+    counters[g] = (counters[g] || 0) + 1;
+    if(r.rankKnown === false) return g === 'M' ? '子' : '女';
+    return (FAM_ORD.charAt(counters[g] - 1) || counters[g]) + (g === 'M' ? '男' : '女');
+  }
+  function famOtherOptions(sel){
+    var opts = [['', '（未登錄）']];
+    fam.rows.forEach(function(r){
+      if(r.kind === 'spouse') opts.push([String(r.d.id), r.d.name]);
+      if(r.kind === 'newSpouse'){
+        var nm = famVal(r.key, 'name');
+        opts.push(['new:' + r.key, (nm || '新配偶') + '（新）']);
+      }
+    });
+    return opts.map(function(o){
+      return '<option value="' + esc(o[0]) + '"' + (o[0] === sel ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+    }).join('');
+  }
+  function famRowHtml(r, label){
+    var d = r.d || {}, k = r.key;
+    function inp(f, val, ph){
+      return '<input class="input fam-in" data-k="' + k + '" data-f="' + f + '" value="' + esc(val == null ? '' : val) +
+             '" placeholder="' + esc(ph || '') + '" autocomplete="off">';
+    }
+    var g = d.gender == null ? 'M' : d.gender;
+    var gsel = '<select class="select fam-in" data-k="' + k + '" data-f="gender" aria-label="性別">' +
+      [['M', '男'], ['F', '女'], ['', '不詳']].map(function(o){
+        return '<option value="' + o[0] + '"' + (g === o[0] ? ' selected' : '') + '>' + o[1] + '</option>';
+      }).join('') + '</select>';
+    var last = '';
+    if(r.kind === 'spouse' || r.kind === 'newSpouse'){
+      last = '<select class="select fam-in" data-k="' + k + '" data-f="status" aria-label="婚姻狀態">' +
+        Object.keys(STATUS_LABEL).map(function(s){
+          return '<option value="' + s + '"' + ((r.status || 'MARRIED') === s ? ' selected' : '') + '>' + STATUS_LABEL[s] + '</option>';
+        }).join('') + '</select>';
+    } else if(r.kind === 'kid' || r.kind === 'newKid'){
+      last = '<select class="select fam-in" data-k="' + k + '" data-f="other" aria-label="' + famOtherWord() + '">' +
+        famOtherOptions(r.other || '') + '</select>';
+    }
+    var act = famIsNew(r)
+      ? '<button type="button" class="btn btn-ghost btn-sm" data-fam-del="' + k + '">移除</button>'
+      : '<button type="button" class="btn btn-ghost btn-sm" data-fam-open="' + d.id + '">完整資料</button>';
+    return '<tr class="fam-' + r.kind + '" data-row="' + k + '">' +
+      '<td class="fam-rel">' + esc(label) + '</td>' +
+      '<td>' + inp('name', d.name, r.kind === 'newKid' ? '新子女姓名' : (r.kind === 'newSpouse' ? '配偶姓名' : '')) + '</td>' +
+      '<td>' + inp('styleName', d.styleName, '') + '</td>' +
+      '<td>' + gsel + '</td>' +
+      '<td>' + inp('birth', d.birth, '例：1955') + '</td>' +
+      '<td>' + inp('death', d.death, '在世留空') + '</td>' +
+      '<td>' + last + '</td>' +
+      '<td class="fam-act">' + act + '</td></tr>';
+  }
+  // 重畫整張表時保留目前打的字（新增列、改到一半的格子）
+  function famRender(){
+    if(!fam || !famBody) return;
+    var keep = {};
+    fam.rows.forEach(function(r){
+      if(famBody.querySelector('[data-row="' + r.key + '"]')) keep[r.key] = famRowVals(r);
+    });
+    var counters = {}, html = '';
+    fam.rows.forEach(function(r){
+      var label = r.kind === 'self' ? '本人'
+        : r.kind === 'spouse' ? '配偶' + (r.role ? '（' + r.role + '）' : '')
+        : r.kind === 'newSpouse' ? '新配偶'
+        : r.kind === 'newKid' ? '新子女' : famKidLabel(r, counters);
+      html += famRowHtml(r, label);
+    });
+    famBody.innerHTML = html;
+    Object.keys(keep).forEach(function(key){
+      var v = keep[key];
+      Object.keys(v).forEach(function(f){
+        var el = famBody.querySelector('[data-k="' + key + '"][data-f="' + f + '"]');
+        if(el && v[f] !== undefined && (f !== 'other' || el.querySelector('option[value="' + v[f] + '"]'))) el.value = v[f];
       });
     });
   }
-  // 3) 儲存，再新增一位：存好後用同一位父／母再開一張（父母、世代、房頭照帶）
-  var saveAgain = false;
-  if(mfAgain) mfAgain.addEventListener('click', function(){ saveAgain = true; mfSave.click(); });
+  function famAddKid(focus){
+    fam.seq += 1;
+    var sps = fam.rows.filter(function(r){ return r.kind === 'spouse'; });
+    fam.rows.push({ key: 'nk' + fam.seq, kind: 'newKid', d: { gender: 'M' }, orig: null,
+                    other: sps.length === 1 ? String(sps[0].d.id) : '' });
+    famRender();
+    if(focus){
+      var el = famBody.querySelector('[data-k="nk' + fam.seq + '"][data-f="name"]');
+      if(el) setTimeout(function(){ el.focus(); }, 30);
+    }
+  }
+  function famAddSpouse(){
+    fam.seq += 1;
+    var sg = fam.self.gender === 'M' ? 'F' : (fam.self.gender === 'F' ? 'M' : '');
+    // 新配偶放在最後一位配偶之後（子女之前）
+    var at = 0;
+    fam.rows.forEach(function(r, i){ if(r.kind === 'self' || r.kind === 'spouse' || r.kind === 'newSpouse') at = i + 1; });
+    fam.rows.splice(at, 0, { key: 'ns' + fam.seq, kind: 'newSpouse', d: { gender: sg }, orig: null, status: 'MARRIED' });
+    famRender();
+    var el = famBody.querySelector('[data-k="ns' + fam.seq + '"][data-f="name"]');
+    if(el) setTimeout(function(){ el.focus(); }, 30);
+  }
+  function famOrig(d, extra){
+    var o = { name: d.name || '', styleName: d.styleName || '', gender: d.gender || '',
+              birth: d.birth || '', death: d.death || '', other: '', status: '' };
+    for(var k in (extra || {})) o[k] = extra[k];
+    return o;
+  }
+  function openFamily(id, addKid){
+    return window.KinAPI.getMember(id).then(function(self){
+      if(!self) throw new Error('查無此成員');
+      var sps = (self.spouses || []).filter(function(s){ return s && s.id; });
+      var kids = self.children || [];
+      var ids = sps.map(function(s){ return s.id; }).concat(kids.map(function(c){ return c.id; }));
+      return Promise.all(ids.map(function(i){
+        return window.KinAPI.getMember(i).catch(function(){ return null; });
+      })).then(function(ds){
+        var byId = {};
+        ds.forEach(function(d){ if(d) byId[d.id] = d; });
+        var rows = [{ key: 's', kind: 'self', d: self, orig: famOrig(self) }];
+        sps.forEach(function(s){
+          var d = byId[s.id] || { id: s.id, name: s.name };
+          rows.push({ key: 'p' + s.id, kind: 'spouse', d: d, role: s.role || '', status: s.status || 'MARRIED',
+                      orig: famOrig(d, { status: s.status || 'MARRIED' }) });
+        });
+        kids.forEach(function(c){
+          var d = byId[c.id] || { id: c.id, name: c.name };
+          var op = c.otherParent ? String(c.otherParent) : '';
+          var opRow = (d.parents || []).filter(function(p){ return String(p.id) === op; })[0];
+          rows.push({ key: 'c' + c.id, kind: 'kid', d: d, origLabel: c.origLabel || '', rankKnown: c.rankKnown,
+                      other: op, otherType: opRow ? opRow.relationType : 'BIOLOGICAL', orig: famOrig(d, { other: op }) });
+        });
+        fam = { self: self, rows: rows, seq: 0 };
+        if(famTitle) famTitle.textContent = (self.name || '') + ' 一家';
+        if(famSub) famSub.textContent = [self.gen ? '第' + genCn(self.gen) + '世' : '', self.branch || '',
+          self.fatherName ? '父 ' + self.fatherName : ''].filter(Boolean).join('・') +
+          (self.gen ? '　子女為第' + genCn(self.gen + 1) + '世' : '');
+        if(famOtherHead) famOtherHead.textContent = famOtherWord() + '（子女）／婚姻（配偶）';
+        if(famBody) famBody.innerHTML = '';
+        famRender();
+        if(addKid) famAddKid(true);
+        famMask.hidden = false;
+      });
+    }).catch(function(err){
+      if(typeof toast === 'function') toast('讀取這一家失敗：' + (err && err.message ? err.message : ''), 'err');
+    });
+  }
+  function closeFamily(force){
+    if(!force && famDirty() &&
+       !window.confirm(['表上改過的還沒儲存，確定要放棄嗎？', '（想保留請按「取消」，再按「儲存」。）'].join(String.fromCharCode(10)))) return false;
+    if(famMask) famMask.hidden = true;
+    fam = null;
+    return true;
+  }
+  function famDeath(v){ return v === '歿' || v === DEATH_UNKNOWN ? DEATH_UNKNOWN : v; }
+  function famSave(){
+    if(!fam || !famSaveBtn || famSaveBtn.disabled) return Promise.resolve(false);
+    var self = fam.self, rows = fam.rows, bad = [];
+    rows.forEach(function(r){
+      r.v = famRowVals(r);
+      if(famIsNew(r) && famHasInput(r.v) && !r.v.name) bad.push(r);
+      if(!famIsNew(r) && !r.v.name) bad.push(r);
+    });
+    famBody.querySelectorAll('.fam-bad').forEach(function(el){ el.classList.remove('fam-bad'); });
+    if(bad.length){
+      bad.forEach(function(r){
+        var el = famBody.querySelector('[data-k="' + r.key + '"][data-f="name"]');
+        if(el) el.classList.add('fam-bad');
+      });
+      if(typeof toast === 'function') toast('有一列沒填姓名：請補上，或按那一列的「移除」', 'err');
+      return Promise.resolve(false);
+    }
+    var failed = [], done = 0, newIds = {}, chain = Promise.resolve();
+    function step(label, fn){
+      chain = chain.then(fn).then(function(){ done += 1; }, function(err){
+        var msg = err && err.message ? String(err.message).replace(/^API \d+：/, '') : '';
+        failed.push(label + (msg ? '（' + msg + '）' : ''));
+      });
+    }
+    function lifePart(v, o, out){
+      if(!o || v.birth !== o.birth) out.birth = v.birth || null;
+      if(!o || v.death !== o.death){ var dd = famDeath(v.death); out.death = dd || null; out.alive = !dd; }
+    }
+    rows.forEach(function(r){
+      var v = r.v, o = r.orig;
+      if(famIsNew(r)) return;
+      var p = { id: r.d.id }, changed = false;
+      ['name', 'styleName'].forEach(function(f){ if(v[f] !== o[f]){ p[f] = v[f]; changed = true; } });
+      if(v.gender !== o.gender){ p.gender = v.gender || null; changed = true; }
+      if(v.birth !== o.birth || v.death !== o.death){ lifePart(v, o, p); changed = true; }
+      if(changed) step('「' + v.name + '」的資料', function(){ return window.KinAPI.saveMember(p); });
+      if(r.kind === 'spouse' && v.status !== o.status)
+        step('「' + v.name + '」的婚姻狀態', function(){ return window.KinAPI.addSpouse(self.id, r.d.id, v.status); });
+    });
+    // 新配偶先建（新子女的生母可能就是他）
+    rows.forEach(function(r){
+      if(r.kind !== 'newSpouse' || !famHasInput(r.v)) return;
+      var v = r.v, p = { name: v.name, styleName: v.styleName, gender: v.gender || null,
+                         gen: self.gen || 1, branch: self.branch || '' };
+      lifePart(v, null, p);
+      step('新配偶「' + v.name + '」', function(){
+        return window.KinAPI.saveMember(p).then(function(res){
+          if(!res || !res.id) throw new Error('建立失敗');
+          newIds['new:' + r.key] = res.id;
+          return window.KinAPI.addSpouse(self.id, res.id, v.status || 'MARRIED');
+        });
+      });
+    });
+    function otherId(v){ return v.other ? (newIds[v.other] || (v.other.indexOf('new:') === 0 ? null : Number(v.other))) : null; }
+    rows.forEach(function(r){
+      var v = r.v;
+      if(r.kind === 'kid' && v.other !== r.orig.other){
+        step('「' + v.name + '」的' + famOtherWord(), function(){
+          var drop = r.orig.other ? window.KinAPI.removeParent(r.d.id, Number(r.orig.other), r.otherType || 'BIOLOGICAL') : Promise.resolve();
+          return drop.then(function(){
+            var nid = otherId(v);
+            return nid ? window.KinAPI.addParent(r.d.id, nid, 'BIOLOGICAL') : null;
+          });
+        });
+      }
+      if(r.kind === 'newKid' && famHasInput(v)){
+        var p = { name: v.name, styleName: v.styleName, gender: v.gender || null,
+                  gen: (self.gen || 0) + 1, branch: self.branch || '' };
+        lifePart(v, null, p);
+        step('新子女「' + v.name + '」', function(){
+          return window.KinAPI.saveMember(p).then(function(res){
+            if(!res || !res.id) throw new Error('建立失敗');
+            return window.KinAPI.addParent(res.id, self.id, 'BIOLOGICAL').then(function(){
+              var nid = otherId(v);
+              return nid ? window.KinAPI.addParent(res.id, nid, 'BIOLOGICAL') : null;
+            });
+          });
+        });
+      }
+    });
+    famSaveBtn.disabled = true;
+    return chain.then(function(){
+      famSaveBtn.disabled = false;
+      if(typeof toast === 'function'){
+        if(failed.length) toast('以下沒有存成功：' + failed.join('、') + '。其餘已儲存', 'err');
+        else toast(done ? '這一家已儲存' : '沒有要儲存的修改', 'ok');
+      }
+      locateInTree(self.id);                       // 族譜重載、選回本人
+      return openFamily(self.id).then(function(){ return !failed.length; });   // 表格換成存好的樣子
+    });
+  }
+  if(famMask){
+    var famCancel = document.getElementById('fam-cancel');
+    if(famCancel) famCancel.addEventListener('click', function(){ closeFamily(false); });
+    if(famSaveBtn) famSaveBtn.addEventListener('click', function(){ window.requireEdit(famSave); });
+    var famAddKidBtn = document.getElementById('fam-add-kid'), famAddSpBtn = document.getElementById('fam-add-spouse');
+    if(famAddKidBtn) famAddKidBtn.addEventListener('click', function(){ if(fam) famAddKid(true); });
+    if(famAddSpBtn) famAddSpBtn.addEventListener('click', function(){ if(fam) famAddSpouse(); });
+    famBody.addEventListener('click', function(e){
+      var del = e.target.closest ? e.target.closest('[data-fam-del]') : null;
+      if(del && fam){
+        var key = del.getAttribute('data-fam-del');
+        fam.rows = fam.rows.filter(function(r){ return r.key !== key; });
+        famRender();
+        return;
+      }
+      var op = e.target.closest ? e.target.closest('[data-fam-open]') : null;
+      if(op && fam){
+        var mid = Number(op.getAttribute('data-fam-open'));
+        var go = function(){ window.KinAPI.getMember(mid).then(function(d){ openMemberForm(d); }); };
+        if(famDirty()){
+          if(window.confirm('表上改過的還沒儲存。要先儲存再打開完整資料嗎？（按「取消」就不存，直接打開）'))
+            famSave().then(function(ok){ if(ok) go(); });
+          else go();
+        } else go();
+      }
+    });
+    // 新配偶改名：生母（生父）下拉跟著更新
+    famBody.addEventListener('input', function(e){
+      var t = e.target;
+      if(!fam || !t || t.getAttribute('data-f') !== 'name') return;
+      var r = fam.rows.filter(function(x){ return x.key === t.getAttribute('data-k'); })[0];
+      if(r && r.kind === 'newSpouse'){
+        famBody.querySelectorAll('[data-f="other"]').forEach(function(sel){
+          var cur = sel.value; sel.innerHTML = famOtherOptions(cur);
+        });
+      }
+    });
+  }
+  function famOpenFromDetail(addKid){
+    if(!curSel) return;
+    window.requireEdit(function(){
+      if(!curSel) return;
+      openFamily(curSel.id, addKid);
+    });
+  }
+  if(mdFamily) mdFamily.addEventListener('click', function(){ famOpenFromDetail(false); });
+  if(mdAddChild) mdAddChild.addEventListener('click', function(){ famOpenFromDetail(true); });
+  // 從「完整資料」改完回來：表格重讀，顯示剛存好的樣子
+  function famRefreshAfterForm(){
+    if(fam && famMask && !famMask.hidden){ var sid = fam.self.id; setTimeout(function(){ openFamily(sid); }, 300); }
+  }
 
   // 「新增成員」接同一表單（空白），存檔後定位到新成員（常駐可見＋requireEdit）
   if(addBtn){
@@ -2738,8 +3013,6 @@ window.createMemberPicker = function (opts) {
         // 父母／配偶改由「親屬關係」區維護（addParent/addSpouse），不再傳 fatherId
       };
       if(wasEdit) payload.id = mformId;
-      var again = saveAgain, ctx = childOf;
-      saveAgain = false;
       mfSave.disabled = true;
       var relFailed = [];
       window.KinAPI.saveMember(payload).then(function(res){
@@ -2761,7 +3034,6 @@ window.createMemberPicker = function (opts) {
         }
         if(newId) locateInTree(newId);            // 重載全樹、展開祖先鏈並選取該人
         else load(branchEl.value, searchEl.value.trim());
-        if(again && ctx && !relFailed.length) openChildForm(ctx);   // 「儲存，再新增一位」
       }).catch(function(err){
         mfSave.disabled = false;
         var msg = err && err.message ? String(err.message).replace(/^API \d+：/, '') : '';
@@ -2786,8 +3058,8 @@ window.createMemberPicker = function (opts) {
         // 清空詳情卡並重載列表
         curSel = null;
         if(mdEdit) mdEdit.disabled = true;   // 未選人：維持 disabled（仍可見）
-        var addKid = document.getElementById('tree-md-addchild');
-        if(addKid) addKid.hidden = true;
+        ['tree-md-family', 'tree-md-addchild'].forEach(function(bid){
+          var b = document.getElementById(bid); if(b) b.hidden = true; });
         mdAva.className = 'ava';
         mdAva.textContent = '—';
         mdNm.textContent = '—';

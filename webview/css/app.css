@@ -424,8 +424,18 @@ button { font-family:inherit; }
 /* ── 親屬關係管理（成員編輯表單）與詳情卡關係列 ──
    只用既有 token（--line/--panel-2/--muted/--faint/--accent-strong），不寫死色碼 */
 .rel-list { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
-/* 「新增子女」且父／母有兩位以上配偶：點選生母（生父）的快捷鈕 */
-.rel-hint { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:-2px 0 8px; font-size:13px; color:var(--muted); }
+/* 一家人一張表（2026-10-13）：沿用 modal／ntc-table 的樣式與色票，只把欄位縮成表格裡用的大小 */
+.modal-fam { max-width:1080px; max-height:calc(100vh / var(--uiz, 1) - 48px); overflow-y:auto; }
+.fam-scroll { overflow-x:auto; }
+.fam-table { table-layout:fixed; min-width:880px; }
+.fam-table td { vertical-align:middle; padding:5px 6px; }
+.fam-table .input, .fam-table .select { width:100%; min-width:0; height:34px; padding:4px 8px; font-size:14px; }
+.fam-table .fam-rel { white-space:nowrap; color:var(--muted); font-size:13px; }
+.fam-table tr.fam-self td { background:var(--panel-2); }
+.fam-table tr.fam-newKid td, .fam-table tr.fam-newSpouse td { background:var(--accent-soft); }
+.fam-table .fam-bad { border-color:var(--warn-line); box-shadow:0 0 0 2px var(--warn-bg); }
+.fam-table .fam-act { text-align:center; }
+.fam-acts { margin-top:12px; }
 .rel-row { display:flex; align-items:center; gap:8px; padding:6px 10px;
   border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
 .rel-row .rel-kind { font-size:13px; color:var(--muted); flex:none; }

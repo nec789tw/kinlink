@@ -431,8 +431,8 @@ def _unknown_elder(path, same_gen=False, sibling=False):
     """長幼判不出（缺生年）→ 雙向一律「族親」。
     總幹事 2026-08-21 拍板：生年資料不可控，不依建檔序推定、不加註，省得困擾。
     guessed=True 讓 kinship_batch 留空（信上退回通稱）；same_gen 讓橋接端仍能判妯娌／連襟
-    （兄弟之妻互為妯娌不分長幼），母親橋接也憑它給舅舅／阿姨／外甥（含母親的堂、族兄弟姊妹，
-    見 _kin_bridge）。sibling＝同胞手足，只是附帶標記，目前沒有程式讀它。"""
+    （兄弟之妻互為妯娌不分長幼）。sibling＝同胞手足：母親橋接只對母親的同胞給舅舅／阿姨／外甥，
+    母親的堂、族兄弟姊妹一律族親（D-3 總幹事 2026-10-13，見 _kin_bridge）。"""
     r = {"forward": "族親", "backward": "族親", "guessed": True, "sameGen": same_gen,
          "path": path + "但雙方（或分支祖）生年未載、長幼無從判定，以族親相稱。"}
     if sibling:
